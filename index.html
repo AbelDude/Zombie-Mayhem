@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zombie Hoard</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Courier New", monospace; background: #121a1c; color: #e9edcf; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    .shell { width: min(900px, 100%); }
+    header { display: flex; justify-content: space-between; align-items: center; margin: 0 0 14px; color: #aab6a0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+    .brand { color: #e9edcf; font-weight: bold; }
+    .frame { position: relative; border: 4px solid #39484a; background: #182326; box-shadow: 0 12px 40px #080d0e99; overflow: hidden; }
+    canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+    .menu { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 20px; background: #101a1cdd; text-align: center; }
+    .menu[hidden] { display: none; }
+    .menu h1 { margin: 0; color: #e9edcf; font-size: clamp(28px, 7vw, 54px); letter-spacing: .08em; text-shadow: 4px 4px #40584a; }
+    .menu p { margin: 0; color: #aab6a0; font-size: 14px; }
+    .menu.game-over p { color: #e9edcf; font-size: clamp(22px, 5vw, 32px); font-weight: bold; text-shadow: 2px 2px #40584a; }
+    .menu-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .menu [hidden] { display: none; }
+    .menu button.secondary { color: #d8dec8; background: #394447; border-color: #74817a; box-shadow: 4px 4px #242e30; }
+    .menu button.secondary:hover, .menu button.secondary:focus-visible { color: #17211e; background: #e0e8b3; box-shadow: 5px 5px #242e30; }
+    button { border: 3px solid #d2daaa; padding: 13px 24px; color: #17211e; background: #c6d391; font: bold 15px "Courier New", monospace; text-transform: uppercase; cursor: pointer; box-shadow: 4px 4px #526653; }
+    button:hover, button:focus-visible { background: #e0e8b3; transform: translate(-1px,-1px); box-shadow: 5px 5px #526653; outline: none; }
+    .hud { display: none; position: absolute; inset: 12px 14px auto; justify-content: space-between; align-items: flex-start; pointer-events: none; color: #eef1d8; font-size: 10px; text-shadow: 2px 2px #17211e; }
+    .hud span { background: #17211ebd; padding: 7px 9px; }
+    .hud #score-display { color: #a62f36; background: transparent; font-size: 20px; font-weight: 900; -webkit-text-stroke: .45px #a62f36; letter-spacing: .03em; padding: 7px 10px; text-shadow: 1px 1px #171316; }
+    .hint { margin-top: 12px; text-align: center; color: #80918a; font-size: 12px; }
+    @media (max-width: 560px) { body { padding: 12px; } header { font-size: 10px; } .hint { line-height: 1.6; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header><span class="brand">✦ ZOMBIE HOARD</span><span>PIXEL ADVENTURE · 01</span></header>
+    <div class="frame">
+      <canvas id="game" width="320" height="200" aria-label="Little Grove game"></canvas>
+      <div class="menu" id="menu">
+        <h1 id="menu-title">ZOMBIE HOARD</h1>
+        <p id="menu-copy"></p>
+        <div class="menu-actions">
+          <button id="start" class="secondary">Start Game</button>
+          <button id="restart" class="secondary" hidden>Restart</button>
+          <button id="to-menu" class="secondary" hidden>Back to Menu</button>
+        </div>
+      </div>
+      <div class="hud" id="hud"><span>ARROWS MOVE · WASD AIM · SPACE FIRE</span><span id="score-display">KILLS · 0</span></div>
+    </div>
+    <div class="hint">Arrow keys move · WASD aim in 8 directions · Space fires · 1 second between shots</div>
+  </main>
+  <script>
+    (() => {
+      const canvas = document.querySelector('#game');
+      const ctx = canvas.getContext('2d');
+      const gunshot = new Audio('./gunshot_001-82585.mp3');
+      gunshot.preload = 'auto';
+      const music = new Audio('./The Final Brawl v3.m4a');
+      music.loop = true;
+      music.preload = 'auto';
+      const menu = document.querySelector('#menu');
+      const hud = document.querySelector('#hud');
+      const start = document.querySelector('#start');
+      const restart = document.querySelector('#restart');
+      const toMenu = document.querySelector('#to-menu');
+      const menuTitle = document.querySelector('#menu-title');
+      const menuCopy = document.querySelector('#menu-copy');
+      const scoreDisplay = document.querySelector('#score-display');
+      const TILE = 16, W = canvas.width, H = canvas.height;
+      const walls = [
+        // Solid walls around a simple indoor room.
+        ...Array.from({length: 20}, (_, x) => ({x, y: 0})),
+        ...Array.from({length: 20}, (_, x) => ({x, y: 12})),
+        ...Array.from({length: 12}, (_, y) => ({x: 0, y})),
+        ...Array.from({length: 12}, (_, y) => ({x: 19, y})),
+      ];
+      const wallSet = new Set(walls.map(p => `${p.x},${p.y}`));
+      const player = { x: 2 * TILE + 3, y: 9 * TILE + 3, w: 10, h: 11, speed: 1.35, step: 0, facing: 1, view: 'side' };
+      const zombies = [];
+      const zombieLooks = [
+        { coatBase:'#394d3d', coat:'#506547', coatLight:'#708052', belt:'#303633', buckle:'#9b8f5d', sleeve:'#506447', cuff:'#809065', skin:'#91a37a', skinShade:'#738660', hair:'#373d37', hairLight:'#50584a', backHair:'#596b50', backHairLight:'#839166', backLine:'#3c4a3d', backAccent:'#66764d', backMark:'#81875d', eye:'#e76c5d', mouth:'#333c31', tear:'#889168', sideMouth:'#59684a' },
+        { coatBase:'#394959', coat:'#4b6479', coatLight:'#6e8597', belt:'#293b4a', buckle:'#83bfbe', sleeve:'#43596d', cuff:'#7e9ba5', skin:'#92b6b3', skinShade:'#6c9490', hair:'#343f47', hairLight:'#5f7675', backHair:'#54746c', backHairLight:'#86a39b', backLine:'#3c5651', backAccent:'#5a7268', backMark:'#77938a', eye:'#85eff1', mouth:'#2d4544', tear:'#789a8a', sideMouth:'#54736a' },
+        { coatBase:'#4b373b', coat:'#69474a', coatLight:'#95646a', belt:'#352d30', buckle:'#d0a15c', sleeve:'#604248', cuff:'#a87869', skin:'#b4a17f', skinShade:'#91715d', hair:'#433532', hairLight:'#765141', backHair:'#594237', backHairLight:'#8b6549', backLine:'#433532', backAccent:'#6b4c3f', backMark:'#987258', eye:'#ffc65f', mouth:'#463238', tear:'#b18b68', sideMouth:'#76564a' }
+      ];
+      const bullets = [];
+      const keys = new Set();
+      const aimKeys = new Set();
+      const aim = { x: 1, y: 0 };
+      let active = false, gameOver = false, dying = false, deathStartedAt = 0, last = 0, lastZombieSpawn = 0, gameStartedAt = 0, nextShotAt = 0, zombiesKilled = 0;
+      const deathAnimationDuration = 900;
+      let playerRedBlink = false;
+
+      function currentLightRadius() {
+        return Math.max(18, 60 - zombiesKilled * 3);
+      }
+
+      function tintPlayerColor(color) {
+        if (!playerRedBlink) return color;
+        const red=parseInt(color.slice(1,3),16), green=parseInt(color.slice(3,5),16), blue=parseInt(color.slice(5,7),16);
+        const brightness=red*0.299+green*0.587+blue*0.114;
+        return `rgb(${Math.round(95+brightness*0.62)},${Math.round(brightness*0.12)},${Math.round(brightness*0.12)})`;
+      }
+      function rect(x,y,w,h,c) { ctx.fillStyle = tintPlayerColor(c); ctx.fillRect(Math.round(x),Math.round(y),w,h); }
+      function drawPlayerEye(x,y) { rect(x,y,1,1,'#293a35'); }
+      function drawGround(lightRadius) {
+        const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
+        rect(0,0,W,H,'#171b24');
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(lightX,lightY,lightRadius,0,Math.PI*2);
+        ctx.clip();
+        rect(0,0,W,H,'#20242a');
+        const cracks=new Set(['2,2','8,3','15,4','5,7','12,8','16,10']);
+        for (let y=0; y<=12; y++) for (let x=0; x<20; x++) {
+          const px=x*TILE, py=y*TILE;
+          const shade=(x*7+y*11)%4;
+          const tile=['#292d33','#2c3036','#272b31','#30343a'][shade];
+          rect(px,py,TILE,TILE,'#3b3f44');
+          rect(px+1,py+1,TILE-2,TILE-2,tile);
+          rect(px+2,py+2,TILE-4,1,'#33373c');
+
+          // Six fixed, jagged cracks are spread across the room.
+          if (cracks.has(`${x},${y}`)) {
+            const cx=px+4+(x*3+y*5)%8;
+            const cy=py+5+(x*5+y*2)%6;
+            rect(cx,cy,1,2,'#1a1e23');
+            rect(cx-1,cy+2,2,1,'#1a1e23');
+            rect(cx,cy+3,1,2,'#1a1e23');
+            rect(cx+1,cy+4,2,1,'#1a1e23');
+            rect(cx+1,cy,1,1,'#383c40');
+          }
+        }
+        const edgeShade=ctx.createRadialGradient(lightX,lightY,lightRadius*0.52,lightX,lightY,lightRadius);
+        edgeShade.addColorStop(0,'rgba(23,27,36,0)');
+        edgeShade.addColorStop(0.55,'rgba(23,27,36,0.18)');
+        edgeShade.addColorStop(1,'rgba(23,27,36,1)');
+        ctx.fillStyle=edgeShade;
+        ctx.fillRect(lightX-lightRadius,lightY-lightRadius,lightRadius*2,lightRadius*2);
+        ctx.restore();
+      }
+      function drawBrickWall(wall) {
+        const px=wall.x*TILE, py=wall.y*TILE;
+        const tint=(wall.x*3+wall.y*5)%3;
+        const bricks=['#5a6064','#60666a','#555c61'];
+        rect(px,py,TILE,TILE,'#363c40');
+        // Three staggered courses with one-pixel mortar and brick highlights.
+        const rows=[
+          [{x:1,w:7},{x:9,w:6}],
+          [{x:1,w:4},{x:6,w:9}],
+          [{x:1,w:7},{x:9,w:6}]
+        ];
+        for(let row=0;row<rows.length;row++) {
+          const brickY=py+1+row*5;
+          for(let i=0;i<rows[row].length;i++) {
+            const brick=rows[row][i];
+            const color=bricks[(tint+row+i)%bricks.length];
+            rect(px+brick.x,brickY,brick.w,4,color);
+            rect(px+brick.x,brickY,brick.w,1,'#70767a');
+            rect(px+brick.x,brickY+3,brick.w,1,'#474d51');
+            if(brick.w>5) rect(px+brick.x+2,brickY+2,1,1,'#666c70');
+          }
+        }
+      }
+      function drawGun(centerX, centerY) {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(Math.atan2(aim.y, aim.x));
+        if (aim.x < 0) ctx.scale(1, -1);
+        ctx.fillStyle = tintPlayerColor('#332f31');
+        ctx.fillRect(1, -2, 7, 4);
+        ctx.fillStyle = tintPlayerColor('#8c9690');
+        ctx.fillRect(2, -2, 6, 2);
+        ctx.fillStyle = tintPlayerColor('#c4b783');
+        ctx.fillRect(4, -1, 1, 1);
+        ctx.fillStyle = tintPlayerColor('#51423a');
+        ctx.fillRect(-1, 1, 3, 3);
+        ctx.restore();
+      }
+      function drawPlayer() {
+        const {x,y,facing}=player;
+        const centerX = Math.round(x + player.w / 2);
+        const px = -7;
+        const py = Math.round(y + player.h) - 18;
+        const previousBlink = playerRedBlink;
+        playerRedBlink = dying && Math.floor((performance.now() - deathStartedAt) / 100) % 2 === 0;
+        if (player.view === 'back') drawGun(centerX, Math.round(y + player.h / 2));
+        // Keep the same 14-by-18 sprite and pixel detail, mirrored as one piece.
+        ctx.save();
+        ctx.translate(centerX, 0);
+        ctx.scale(player.view === 'side' && !facing ? -1 : 1, 1);
+        rect(px+3,py+16,9,2,'#303d38');
+        rect(px+4,py+14,3,3,'#604537');
+        rect(px+9,py+14,3,3,'#604537');
+        rect(px+3,py+16,4,2,'#382f2e');
+        rect(px+9,py+16,4,2,'#382f2e');
+        // Coat and belt, with tiny trim pixels for added definition.
+        rect(px+4,py+8,7,7,'#b86e43');
+        rect(px+3,py+9,9,5,'#c9824d');
+        rect(px+5,py+8,5,2,'#e0aa61');
+        rect(px+5,py+13,5,1,'#4c4038');
+        rect(px+7,py+12,1,2,'#e3c87f');
+        rect(px+1,py+9,3,5,'#d09958');
+        rect(px+11,py+9,3,5,'#d09958');
+        rect(px+1,py+13,3,2,'#e4bd78');
+        rect(px+11,py+13,3,2,'#e4bd78');
+        if (player.view === 'back') {
+          // Rear view: hair covers the head, with no visible face or eyes.
+          rect(px+4,py+3,8,6,'#593f35');
+          rect(px+5,py+4,6,2,'#72513b');
+          rect(px+4,py+7,8,2,'#49372f');
+          rect(px+4,py+2,8,3,'#49372f');
+          rect(px+5,py+1,6,2,'#72513b');
+          rect(px+6,py+9,4,1,'#d09958');
+          rect(px+6,py+10,1,4,'#e0aa61');
+          rect(px+9,py+10,1,4,'#e0aa61');
+        } else {
+          // Front and side views keep the face visible; down shows both eyes.
+          rect(px+4,py+3,8,6,'#e4bd78');
+          rect(px+3,py+5,2,3,'#d1a06c');
+          rect(px+11,py+5,2,3,'#d1a06c');
+          rect(px+4,py+2,8,3,'#49372f');
+          rect(px+5,py+1,6,2,'#72513b');
+          if (player.view === 'front') {
+            drawPlayerEye(px+6,py+6);
+            drawPlayerEye(px+10,py+6);
+            rect(px+4,py+4,8,1,'#593f35');
+            rect(px+6,py+8,5,1,'#f0d88f');
+            rect(px+6,py+9,1,3,'#e0aa61');
+            rect(px+10,py+9,1,3,'#e0aa61');
+          } else {
+            drawPlayerEye(px+9,py+6);
+            rect(px+7,py+8,3,1,'#f0d88f');
+          }
+        }
+        ctx.restore();
+        // In the front and side views the revolver is held visibly over the sprite.
+        if (player.view !== 'back') drawGun(centerX, Math.round(y + player.h / 2));
+        playerRedBlink = previousBlink;
+      }
+      function drawZombie(zombie) {
+        const look = zombieLooks[zombie.look];
+        const centerX = Math.round(zombie.x + zombie.w / 2);
+        const px = -7;
+        const py = Math.round(zombie.y + zombie.h) - 18;
+        ctx.save();
+        ctx.translate(centerX, 0);
+        ctx.scale(zombie.view === 'side' && !zombie.facing ? -1 : 1, 1);
+        // Keep the same detailed 14-by-18 pixel scale as the player.
+        rect(px+3,py+16,9,2,'#30352f');
+        if (zombie.view === 'side') {
+          rect(px+6,py+14,4,3,'#414637');
+          rect(px+5,py+16,6,2,'#292d2c');
+          rect(px+5,py+8,6,7,look.coatBase);
+          rect(px+4,py+9,8,5,look.coat);
+          rect(px+6,py+8,4,2,look.coatLight);
+          rect(px+6,py+13,4,1,look.belt);
+          rect(px+7,py+12,1,2,look.buckle);
+          rect(px+10,py+9,3,5,look.sleeve);
+          rect(px+10,py+13,3,2,look.cuff);
+        } else {
+          rect(px+4,py+14,3,3,'#414637');
+          rect(px+9,py+14,3,3,'#414637');
+          rect(px+3,py+16,4,2,'#292d2c');
+          rect(px+9,py+16,4,2,'#292d2c');
+          // Torn coat and belt stay centered in front and back views.
+          rect(px+4,py+8,7,7,look.coatBase);
+          rect(px+3,py+9,9,5,look.coat);
+          rect(px+5,py+8,5,2,look.coatLight);
+          rect(px+5,py+13,5,1,look.belt);
+          rect(px+7,py+12,1,2,look.buckle);
+          rect(px+1,py+9,3,5,look.sleeve);
+          rect(px+11,py+9,3,5,look.sleeve);
+          rect(px+1,py+13,3,2,look.cuff);
+          rect(px+11,py+13,3,2,look.cuff);
+        }
+        if (zombie.view === 'back') {
+          // Back of the head and jacket: symmetrical, with no eyes showing.
+          rect(px+4,py+3,8,6,look.backHair);
+          rect(px+5,py+4,6,2,look.backHairLight);
+          rect(px+4,py+7,8,2,look.backLine);
+          rect(px+4,py+2,8,3,look.hair);
+          rect(px+5,py+1,6,2,look.hairLight);
+          rect(px+6,py+9,4,1,look.backAccent);
+          rect(px+6,py+10,1,4,look.backMark);
+          rect(px+9,py+10,1,4,look.backMark);
+        } else if (zombie.view === 'side') {
+          // Narrow profile face, with the nose and single eye facing forward.
+          rect(px+5,py+3,7,6,look.skin);
+          rect(px+11,py+5,2,2,look.skinShade);
+          rect(px+4,py+2,8,3,look.hair);
+          rect(px+5,py+1,6,2,look.hairLight);
+          rect(px+10,py+4,2,3,look.hair);
+          rect(px+9,py+6,1,1,look.eye);
+          rect(px+11,py+8,2,1,look.sideMouth);
+        } else {
+          // Downward-facing zombies show both red eyes and a ragged chest.
+          rect(px+4,py+3,8,6,look.skin);
+          rect(px+3,py+5,2,3,look.skinShade);
+          rect(px+11,py+5,2,3,look.skinShade);
+          rect(px+4,py+2,8,3,look.hair);
+          rect(px+5,py+1,6,2,look.hairLight);
+          if (zombie.view === 'front') {
+            rect(px+6,py+6,1,1,look.eye);
+            rect(px+10,py+6,1,1,look.eye);
+            rect(px+6,py+8,5,1,look.mouth);
+            rect(px+6,py+9,1,3,look.tear);
+            rect(px+10,py+9,1,3,look.tear);
+          } else {
+            rect(px+9,py+6,1,1,look.eye);
+            rect(px+7,py+8,3,1,look.sideMouth);
+          }
+        }
+        ctx.restore();
+      }
+      function draw() {
+        const lightRadius = currentLightRadius();
+        drawGround(lightRadius);
+        for (const wall of walls) {
+          drawBrickWall(wall);
+        }
+        if (active) {
+          const lightX = player.x + player.w / 2;
+          const lightY = player.y + player.h / 2;
+          for (const zombie of zombies) {
+            const zombieX = zombie.x + zombie.w / 2;
+            const zombieY = zombie.y + zombie.h / 2;
+            const distance = Math.hypot(zombieX - lightX, zombieY - lightY);
+            const fadeWidth = 10;
+            const fade = Math.max(0, Math.min(1, (lightRadius - distance) / fadeWidth));
+            const opacity = fade * fade * (3 - 2 * fade);
+            if (opacity > 0) {
+              ctx.save();
+              ctx.globalAlpha = opacity;
+              drawZombie(zombie);
+              ctx.restore();
+            }
+          }
+        }
+        for (const bullet of bullets) {
+          const distance = Math.hypot(bullet.x + 1 - (player.x + player.w / 2), bullet.y + 1 - (player.y + player.h / 2));
+          const fade = Math.max(0, Math.min(1, (lightRadius - distance) / (lightRadius * 0.64)));
+          const opacity = fade * fade * (3 - 2 * fade);
+          if (opacity > 0) {
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            rect(bullet.x, bullet.y, 2, 2, '#ffe59a');
+            ctx.restore();
+          }
+        }
+        drawPlayer();
+        // Keep a small pool of warm light centered on the player in the dark room.
+        const lightX = player.x + player.w / 2;
+        const lightY = player.y + player.h / 2;
+        const glow = ctx.createRadialGradient(lightX, lightY, 3, lightX, lightY, lightRadius);
+        glow.addColorStop(0, 'rgba(255, 230, 157, 0.34)');
+        glow.addColorStop(0.55, 'rgba(255, 220, 145, 0.16)');
+        glow.addColorStop(1, 'rgba(255, 210, 130, 0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(lightX - lightRadius, lightY - lightRadius, lightRadius * 2, lightRadius * 2);
+      }
+      function blocked(x,y) {
+        const left=Math.floor(x/TILE), right=Math.floor((x+player.w-1)/TILE);
+        const top=Math.floor(y/TILE), bottom=Math.floor((y+player.h-1)/TILE);
+        for (let ty=top; ty<=bottom; ty++) for (let tx=left; tx<=right; tx++) if (wallSet.has(`${tx},${ty}`)) return true;
+        return false;
+      }
+      function update() {
+        let dx=0,dy=0;
+        if(keys.has('ArrowLeft')) {dx--;player.facing=0;}
+        if(keys.has('ArrowRight')) {dx++;player.facing=1;}
+        if(keys.has('ArrowUp')) dy--;
+        if(keys.has('ArrowDown')) dy++;
+        if(dy < 0) player.view = 'back';
+        else if(dy > 0) player.view = 'front';
+        else if(dx) player.view = 'side';
+        if(dx && dy) {dx*=0.7071;dy*=0.7071;}
+        const nx=player.x+dx*player.speed, ny=player.y+dy*player.speed;
+        if(!blocked(nx,player.y)) player.x=nx;
+        if(!blocked(player.x,ny)) player.y=ny;
+        if(dx || dy) player.step++;
+        updateZombies();
+        updateBullets();
+      }
+      function updateAim() {
+        let x = 0, y = 0;
+        if (aimKeys.has('a')) x--;
+        if (aimKeys.has('d')) x++;
+        if (aimKeys.has('w')) y--;
+        if (aimKeys.has('s')) y++;
+        if (x || y) {
+          const length = Math.hypot(x, y);
+          aim.x = x / length;
+          aim.y = y / length;
+        }
+      }
+      function shoot() {
+        const now = performance.now();
+        if (now < nextShotAt) return;
+        nextShotAt = now + 1000;
+        bullets.push({
+          x: player.x + player.w / 2 + aim.x * 8,
+          y: player.y + player.h / 2 + aim.y * 8,
+          vx: aim.x * 4,
+          vy: aim.y * 4,
+          life: 75
+        });
+        gunshot.currentTime = 0;
+        const playback = gunshot.play();
+        if (playback) playback.catch(() => {});
+      }
+      function updateBullets() {
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          const bullet = bullets[i];
+          bullet.x += bullet.vx;
+          bullet.y += bullet.vy;
+          bullet.life--;
+          const tileX = Math.floor(bullet.x / TILE);
+          const tileY = Math.floor(bullet.y / TILE);
+          if (bullet.life <= 0 || wallSet.has(`${tileX},${tileY}`)) {
+            bullets.splice(i, 1);
+            continue;
+          }
+          const hitIndex = zombies.findIndex(zombie => bullet.x >= zombie.x && bullet.x <= zombie.x + zombie.w && bullet.y >= zombie.y && bullet.y <= zombie.y + zombie.h);
+          if (hitIndex >= 0) {
+            const zombie = zombies[hitIndex];
+            zombie.health--;
+            bullets.splice(i, 1);
+            if (zombie.health <= 0) {
+              zombies.splice(hitIndex, 1);
+              zombiesKilled++;
+              scoreDisplay.textContent = `KILLS · ${zombiesKilled}`;
+            }
+          }
+        }
+      }
+      function updateZombies() {
+        for (const zombie of zombies) {
+          let dx = player.x + player.w / 2 - (zombie.x + zombie.w / 2);
+          let dy = player.y + player.h / 2 - (zombie.y + zombie.h / 2);
+          const distance = Math.hypot(dx, dy);
+          if (distance > 90) continue;
+          if (distance < 1) continue;
+          dx /= distance;
+          dy /= distance;
+          zombie.facing = dx >= 0 ? 1 : 0;
+          if (Math.abs(dx) > Math.abs(dy)) zombie.view = 'front';
+          else if (dy < 0) zombie.view = 'back';
+          else zombie.view = 'front';
+          let moveX = dx * zombie.speed;
+          let moveY = dy * zombie.speed;
+
+          // Add a gentle push away from nearby zombies so the horde stays spread out.
+          for (const other of zombies) {
+            if (other === zombie) continue;
+            const awayX = zombie.x - other.x;
+            const awayY = zombie.y - other.y;
+            const gapX = Math.abs(awayX);
+            const gapY = Math.abs(awayY);
+            const minGapX = (zombie.w + other.w) / 2;
+            const minGapY = (zombie.h + other.h) / 2;
+            if (gapX < minGapX && gapY < minGapY) {
+              const overlapX = minGapX - gapX;
+              const overlapY = minGapY - gapY;
+              if (overlapX < overlapY) moveX += Math.sign(awayX || (Math.random() < 0.5 ? -1 : 1)) * Math.min(1.1, overlapX * 0.18);
+              else moveY += Math.sign(awayY || (Math.random() < 0.5 ? -1 : 1)) * Math.min(1.1, overlapY * 0.18);
+            }
+          }
+
+          const nextX = zombie.x + moveX;
+          const nextY = zombie.y + moveY;
+          if (!blocked(nextX, zombie.y) && !zombies.some(other => other !== zombie && overlaps(nextX, zombie.y, zombie, other))) zombie.x = nextX;
+          if (!blocked(zombie.x, nextY) && !zombies.some(other => other !== zombie && overlaps(zombie.x, nextY, zombie, other))) zombie.y = nextY;
+          if (overlaps(player.x, player.y, player, zombie)) {
+            startDeathAnimation();
+            return;
+          }
+        }
+      }
+      function overlaps(x, y, a, b) {
+        return x < b.x + b.w && x + a.w > b.x && y < b.y + b.h && y + a.h > b.y;
+      }
+      function loop(time) {
+        const delta=Math.min(32,time-last); last=time;
+        if(active && !gameOver && !dying) {
+          checkZombieSpawn(time);
+          for(let i=0;i<delta/16 && !gameOver && !dying;i++) update();
+        }
+        if (dying && time - deathStartedAt >= deathAnimationDuration) endGame();
+        draw(); requestAnimationFrame(loop);
+      }
+      function startGame() {
+        keys.clear();
+        aimKeys.clear();
+        bullets.length = 0;
+        zombies.length = 0;
+        zombiesKilled = 0;
+        dying = false;
+        scoreDisplay.textContent = 'KILLS · 0';
+        player.x = 2 * TILE + 3;
+        player.y = 9 * TILE + 3;
+        player.facing = 1;
+        player.view = 'side';
+        aim.x = 1;
+        aim.y = 0;
+        gameOver = false;
+        menu.classList.remove('game-over');
+        menu.hidden = true;
+        hud.style.display = 'flex';
+        active = true;
+        last = performance.now();
+        gameStartedAt = last;
+        lastZombieSpawn = last;
+        nextShotAt = 0;
+        if (music.paused) {
+          const playback = music.play();
+          if (playback) playback.catch(() => {});
+        }
+      }
+      function endGame() {
+        if (gameOver) return;
+        dying = false;
+        gameOver = true;
+        active = false;
+        keys.clear();
+        aimKeys.clear();
+        hud.style.display = 'none';
+        menuTitle.textContent = 'YOU GOT ZOMBI-ED';
+        menuCopy.textContent = `You killed ${zombiesKilled} ${zombiesKilled === 1 ? 'zombie' : 'zombies'}.`;
+        menu.classList.add('game-over');
+        start.hidden = true;
+        restart.hidden = false;
+        toMenu.hidden = false;
+        menu.hidden = false;
+      }
+      function startDeathAnimation() {
+        if (dying || gameOver) return;
+        dying = true;
+        deathStartedAt = performance.now();
+        keys.clear();
+        aimKeys.clear();
+        bullets.length = 0;
+      }
+      function showMainMenu() {
+        active = false;
+        gameOver = false;
+        keys.clear();
+        aimKeys.clear();
+        bullets.length = 0;
+        zombies.length = 0;
+        music.pause();
+        music.currentTime = 0;
+        player.x = 2 * TILE + 3;
+        player.y = 9 * TILE + 3;
+        hud.style.display = 'none';
+        menuTitle.textContent = 'ZOMBIE HOARD';
+        menuCopy.textContent = '';
+        menu.classList.remove('game-over');
+        start.hidden = false;
+        restart.hidden = true;
+        toMenu.hidden = true;
+        menu.hidden = false;
+      }
+      start.addEventListener('click', startGame);
+      restart.addEventListener('click', startGame);
+      toMenu.addEventListener('click', showMainMenu);
+      window.addEventListener('keydown', e => {
+        if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Spacebar'].includes(e.key)) e.preventDefault();
+        if (!active || dying) return;
+        if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) keys.add(e.key);
+        if(['w','a','s','d'].includes(e.key.toLowerCase())) { aimKeys.add(e.key.toLowerCase()); updateAim(); }
+        if(e.code === 'Space' && !e.repeat) shoot();
+      });
+      window.addEventListener('keyup', e => {
+        keys.delete(e.key);
+        if(['w','a','s','d'].includes(e.key.toLowerCase())) { aimKeys.delete(e.key.toLowerCase()); updateAim(); }
+      });
+      window.addEventListener('blur', () => { keys.clear(); aimKeys.clear(); updateAim(); });
+
+      function spawnZombie() {
+        const spawnDistance = 70;
+        let zombie;
+        // Choose a direction that keeps the full zombie inside the room, without shortening the spawn distance.
+        for (let attempt = 0; attempt < 100; attempt++) {
+          const angle = Math.random() * Math.PI * 2;
+          const x = player.x + Math.cos(angle) * spawnDistance;
+          const y = player.y + Math.sin(angle) * spawnDistance;
+          if (x >= TILE + 1 && x + player.w <= W - TILE - 1 && y >= TILE + 1 && y + player.h <= H - TILE - 1) {
+            const roll = Math.random();
+            const look = roll < 0.72 ? 0 : roll < 0.94 ? 1 : 2;
+            zombie = {
+              x, y, w: player.w, h: player.h,
+              speed: player.speed * (0.3 + Math.random() * 0.3),
+              look,
+              health: look + 1,
+              facing: x < player.x ? 1 : 0,
+              view: 'side'
+            };
+            break;
+          }
+        }
+        // At least one valid 70-pixel direction is available throughout this room.
+        if (!zombie) return;
+        zombies.push(zombie);
+      }
+
+      function checkZombieSpawn(time) {
+        const spawnInterval = Math.max(1500, 6000 - Math.floor((time - gameStartedAt) / 45000) * 1000);
+        if (!active || time - lastZombieSpawn < spawnInterval) return;
+        spawnZombie();
+        lastZombieSpawn = time;
+      }
+
+      draw(); requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
