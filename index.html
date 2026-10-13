@@ -180,6 +180,14 @@
       let walls = [];
       let wallSet = new Set();
       const camera = { x: 0, y: 0 };
+      const pressureButton = { x: 8 * TILE, y: roomRows * TILE + 6 * TILE + 4, w: 16, h: 8 };
+      const lowerDoorTiles = [
+        { x: roomCols - 1, y: roomRows + 5 },
+        { x: roomCols - 1, y: roomRows + 6 }
+      ];
+      const lowerDoorKeys = new Set(lowerDoorTiles.map(tile => `${tile.x},${tile.y}`));
+      let pressureButtonActive = false;
+      let doorOpen = false;
       function configureLevelMap(level) {
         const roomCount = level === 2 ? 2 : 1;
         worldCols = roomCols * roomCount;
@@ -201,9 +209,8 @@
             const verticalDivider = roomCount === 2 && x === roomCols - 1;
             const horizontalDivider = roomCount === 2 && y === roomRows - 1;
             if (outerWall) addWall(x, y);
-            // Close the upper passage from the spawn room; the right side is reached by going down, across, then up.
-            const lowerPassage = y >= roomRows && [5, 6].includes(y % roomRows);
-            if (verticalDivider && !lowerPassage) addWall(x, y);
+            // The lower doorway stays blocked until the pressure button is held down.
+            if (verticalDivider) addWall(x, y);
             if (horizontalDivider && ![9, 10].includes(x % roomCols)) addWall(x, y);
           }
         }
@@ -219,10 +226,16 @@
           for (const obstacle of interiorObstacles) addWall(obstacle.x, obstacle.y);
         }
         wallSet = wallKeys;
+        pressureButtonActive = false;
+        doorOpen = false;
         camera.x = 0;
         camera.y = 0;
       }
       configureLevelMap(1);
+      function isWallTile(x, y) {
+        const key = `${x},${y}`;
+        return wallSet.has(key) && !(currentLevel === 2 && doorOpen && lowerDoorKeys.has(key));
+      }
       const player = { x: 2 * TILE + 3, y: 9 * TILE + 3, w: 10, h: 11, speed: 1.35, step: 0, facing: 1, view: 'side' };
       const zombies = [];
       const crates = [];
@@ -488,8 +501,12 @@
         ctx.translate(-camera.x,-camera.y);
         drawGround(lightRadius,showGameplayScene,camera.x,camera.y);
         for (const wall of walls) {
-          drawBrickWall(wall);
+          const isLowerDoor=currentLevel === 2 && lowerDoorKeys.has(`${wall.x},${wall.y}`);
+          if (isLowerDoor && doorOpen) continue;
+          if (isLowerDoor) drawDoorTile(wall);
+          else drawBrickWall(wall);
         }
+        if (currentLevel === 2 && showGameplayScene) drawPressureButton();
         if (active) {
           const lightX = player.x + player.w / 2;
           const lightY = player.y + player.h / 2;
@@ -601,10 +618,29 @@
         rect(x+3,y+11,6,2,'#a97838');
         rect(x+4,y+13,4,1,'#725231');
       }
+      function drawPressureButton() {
+        const {x,y,w,h}=pressureButton;
+        rect(x,y+2,w,h-2,'#626a6d');
+        rect(x+1,y+1,w-2,h-2,'#9aa3a5');
+        rect(x+2,y,w-4,3,'#d2d8d8');
+        rect(x+3,y+3,w-6,2,pressureButtonActive?'#848e91':'#b8c0c1');
+        rect(x+2,y+h-2,w-4,1,'#737c7f');
+      }
+      function drawDoorTile(wall) {
+        const x=wall.x*TILE, y=wall.y*TILE;
+        rect(x,y,TILE,TILE,'#292f33');
+        rect(x+2,y+1,TILE-4,TILE-2,'#899396');
+        rect(x+4,y+2,TILE-8,TILE-4,'#566267');
+        rect(x+5,y+3,TILE-10,TILE-6,'#707b7f');
+        rect(x+3,y+2,1,TILE-4,'#c1c8c4');
+        rect(x+TILE-4,y+2,1,TILE-4,'#3b4549');
+        rect(x+5,y+TILE/2-1,TILE-10,2,'#3d474b');
+        rect(x+6,y+TILE/2-1,2,2,'#d1c48d');
+      }
       function blockedRect(x,y,w,h) {
         const left=Math.floor(x/TILE), right=Math.floor((x+w-1)/TILE);
         const top=Math.floor(y/TILE), bottom=Math.floor((y+h-1)/TILE);
-        for (let ty=top; ty<=bottom; ty++) for (let tx=left; tx<=right; tx++) if (wallSet.has(`${tx},${ty}`)) return true;
+        for (let ty=top; ty<=bottom; ty++) for (let tx=left; tx<=right; tx++) if (isWallTile(tx,ty)) return true;
         return false;
       }
       function canMoveCrate(crate,x,y) {
@@ -618,7 +654,7 @@
       function blocked(x,y) {
         const left=Math.floor(x/TILE), right=Math.floor((x+player.w-1)/TILE);
         const top=Math.floor(y/TILE), bottom=Math.floor((y+player.h-1)/TILE);
-        for (let ty=top; ty<=bottom; ty++) for (let tx=left; tx<=right; tx++) if (wallSet.has(`${tx},${ty}`)) return true;
+        for (let ty=top; ty<=bottom; ty++) for (let tx=left; tx<=right; tx++) if (isWallTile(tx,ty)) return true;
         return false;
       }
       function setCrateSlideSound(shouldPlay) {
@@ -630,6 +666,17 @@
           crateSlideSound.pause();
           crateSlideSound.currentTime = 0;
         }
+      }
+      function updatePressureButton() {
+        if (currentLevel !== 2) {
+          pressureButtonActive = false;
+          doorOpen = false;
+          return;
+        }
+        const playerOnButton=overlaps(pressureButton.x,pressureButton.y,pressureButton,player);
+        const crateOnButton=crates.some(crate => overlaps(pressureButton.x,pressureButton.y,pressureButton,crate));
+        pressureButtonActive=playerOnButton || crateOnButton;
+        doorOpen=pressureButtonActive;
       }
       function update() {
         let pushedCrate=false;
@@ -671,6 +718,7 @@
             lightRestoredAtKills=zombiesKilled;
           }
         }
+        updatePressureButton();
         if(dx || dy) player.step++;
         updateZombies();
         updateBullets();
@@ -712,7 +760,7 @@
           bullet.life--;
           const tileX = Math.floor(bullet.x / TILE);
           const tileY = Math.floor(bullet.y / TILE);
-          if (bullet.life <= 0 || wallSet.has(`${tileX},${tileY}`)) {
+          if (bullet.life <= 0 || isWallTile(tileX,tileY)) {
             bullets.splice(i, 1);
             continue;
           }
@@ -1134,6 +1182,7 @@
           [spots[i],spots[j]]=[spots[j],spots[i]];
         }
         for(const spot of spots) {
+          if (currentLevel === 2 && overlaps(spot.x,spot.y,crate,pressureButton)) continue;
           const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
           const nearestX=Math.max(spot.x,Math.min(lightX,spot.x+crate.w));
           const nearestY=Math.max(spot.y,Math.min(lightY,spot.y+crate.h));
