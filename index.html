@@ -91,7 +91,7 @@
       const aimKeys = new Set();
       const aim = { x: 1, y: 0 };
       let active = false, gameOver = false, dying = false, deathStartedAt = 0, last = 0, lastZombieSpawn = 0, gameStartedAt = 0, nextShotAt = 0, zombiesKilled = 0;
-      let crateSpawnCount = 0;
+      let nextCrateKillThreshold = 2;
       const deathAnimationDuration = 900;
       let playerRedBlink = false;
       let zombieRedBlink = false;
@@ -485,7 +485,9 @@
             bullets.splice(i, 1);
             continue;
           }
-          if (crates.some(crate => bullet.x >= crate.x && bullet.x <= crate.x+crate.w && bullet.y >= crate.y && bullet.y <= crate.y+crate.h)) {
+          const crateIndex=crates.findIndex(crate => bullet.x >= crate.x && bullet.x <= crate.x+crate.w && bullet.y >= crate.y && bullet.y <= crate.y+crate.h);
+          if (crateIndex >= 0) {
+            crates.splice(crateIndex,1);
             bullets.splice(i, 1);
             continue;
           }
@@ -572,7 +574,7 @@
         bullets.length = 0;
         zombies.length = 0;
         crates.length = 0;
-        crateSpawnCount = 0;
+        nextCrateKillThreshold = 2;
         zombiesKilled = 0;
         dying = false;
         scoreDisplay.textContent = 'KILLS · 0';
@@ -631,7 +633,7 @@
         bullets.length = 0;
         zombies.length = 0;
         crates.length = 0;
-        crateSpawnCount = 0;
+        nextCrateKillThreshold = 2;
         music.pause();
         music.currentTime = 0;
         player.x = 2 * TILE + 3;
@@ -659,7 +661,7 @@
           return;
         }
         menuTitle.textContent = 'HOW TO PLAY';
-        menuCopy.textContent = 'Arrow keys  ·  Move\nW A S D  ·  Aim your revolver\nSpace  ·  Fire (1 second between shots)\n\nSurvive the zombie horde and earn kills. Different zombies take different numbers of hits. Stay alert: the light shrinks as your kill count rises.\n\nA crate appears every 2 kills, up to 2 crates at a time. Run into a crate to push it; pushing slows you by 50%. Crates block zombies and bullets.';
+        menuCopy.textContent = 'Arrow keys  ·  Move\nW A S D  ·  Aim your revolver\nSpace  ·  Fire (1 second between shots)\n\nSurvive the zombie horde and earn kills. Different zombies take different numbers of hits. Stay alert: the light shrinks as your kill count rises.\n\nA crate appears every 2 kills when there is room, with a maximum of 2 at a time. Run into a crate to push it; pushing slows you by 50%. Crates block zombies. Shoot crates to break them.';
         menuCopy.classList.add('rules-copy');
         start.hidden = true;
         rules.textContent = 'Back to Menu';
@@ -733,8 +735,9 @@
         return false;
       }
       function checkCrateSpawns() {
-        if (crateSpawnCount<2 && zombiesKilled >= (crateSpawnCount+1)*2 && spawnCrate()) {
-          crateSpawnCount++;
+        while (zombiesKilled >= nextCrateKillThreshold) {
+          if (crates.length < 2 && !spawnCrate()) return;
+          nextCrateKillThreshold += 2;
         }
       }
 
