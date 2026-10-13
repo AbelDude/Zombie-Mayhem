@@ -1125,7 +1125,7 @@
       restart.addEventListener('click', startGame);
       toMenu.addEventListener('click', showMainMenu);
       window.addEventListener('keydown', e => {
-        if (e.ctrlKey && e.key === 'Tab' && !e.repeat) {
+        if (e.ctrlKey && e.code === 'Digit6' && !e.repeat) {
           e.preventDefault();
           beginLevelIntro(2);
           return;
