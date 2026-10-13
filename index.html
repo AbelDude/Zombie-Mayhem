@@ -174,14 +174,42 @@
       const menuCopy = document.querySelector('#menu-copy');
       const scoreDisplay = document.querySelector('#score-display');
       const TILE = 16, W = canvas.width, H = canvas.height;
-      const walls = [
-        // Solid walls around a simple indoor room.
-        ...Array.from({length: 20}, (_, x) => ({x, y: 0})),
-        ...Array.from({length: 20}, (_, x) => ({x, y: 12})),
-        ...Array.from({length: 12}, (_, y) => ({x: 0, y})),
-        ...Array.from({length: 12}, (_, y) => ({x: 19, y})),
-      ];
-      const wallSet = new Set(walls.map(p => `${p.x},${p.y}`));
+      const roomCols = W / TILE, roomRows = H / TILE;
+      let worldCols = roomCols, worldRows = roomRows;
+      let worldWidth = W, worldHeight = H;
+      let walls = [];
+      let wallSet = new Set();
+      const camera = { x: 0, y: 0 };
+      function configureLevelMap(level) {
+        const roomCount = level === 2 ? 2 : 1;
+        worldCols = roomCols * roomCount;
+        worldRows = roomRows * roomCount;
+        worldWidth = worldCols * TILE;
+        worldHeight = worldRows * TILE;
+        walls = [];
+        const wallKeys = new Set();
+        const addWall = (x, y) => {
+          const key = `${x},${y}`;
+          if (!wallKeys.has(key)) {
+            wallKeys.add(key);
+            walls.push({ x, y });
+          }
+        };
+        for (let y = 0; y < worldRows; y++) {
+          for (let x = 0; x < worldCols; x++) {
+            const outerWall = x === 0 || x === worldCols - 1 || y === 0 || y === worldRows - 1;
+            const verticalDivider = roomCount === 2 && x === roomCols - 1;
+            const horizontalDivider = roomCount === 2 && y === roomRows - 1;
+            if (outerWall) addWall(x, y);
+            if (verticalDivider && ![5, 6].includes(y % roomRows)) addWall(x, y);
+            if (horizontalDivider && ![9, 10].includes(x % roomCols)) addWall(x, y);
+          }
+        }
+        wallSet = wallKeys;
+        camera.x = 0;
+        camera.y = 0;
+      }
+      configureLevelMap(1);
       const player = { x: 2 * TILE + 3, y: 9 * TILE + 3, w: 10, h: 11, speed: 1.35, step: 0, facing: 1, view: 'side' };
       const zombies = [];
       const crates = [];
@@ -218,17 +246,18 @@
       }
       function rect(x,y,w,h,c) { ctx.fillStyle = tintGameColor(c); ctx.fillRect(Math.round(x),Math.round(y),w,h); }
       function drawPlayerEye(x,y) { rect(x,y,1,1,'#293a35'); }
-      function drawGround(lightRadius, illuminated) {
+      function drawGround(lightRadius, illuminated, cameraX, cameraY) {
         const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
-        rect(0,0,W,H,'#171b24');
+        rect(cameraX,cameraY,W,H,'#171b24');
         if (!illuminated) return;
         ctx.save();
         ctx.beginPath();
         ctx.arc(lightX,lightY,lightRadius,0,Math.PI*2);
         ctx.clip();
-        rect(0,0,W,H,'#20242a');
+        rect(0,0,worldWidth,worldHeight,'#20242a');
         const cracks=new Set(['2,2','8,3','15,4','5,7','12,8','16,10']);
-        for (let y=0; y<=12; y++) for (let x=0; x<20; x++) {
+        for (let y=0; y<worldRows; y++) for (let x=0; x<worldCols; x++) {
+          if (!cracks.has(`${x % roomCols},${y % roomRows}`)) continue;
           const px=x*TILE, py=y*TILE;
           const shade=(x*7+y*11)%4;
           const tile=['#292d33','#2c3036','#272b31','#30343a'][shade];
@@ -236,8 +265,8 @@
           rect(px+1,py+1,TILE-2,TILE-2,tile);
           rect(px+2,py+2,TILE-4,1,'#33373c');
 
-          // Six fixed, jagged cracks are spread across the room.
-          if (cracks.has(`${x},${y}`)) {
+          // Six fixed, jagged cracks repeat in each room of the larger level.
+          if (cracks.has(`${x % roomCols},${y % roomRows}`)) {
             const cx=px+4+(x*3+y*5)%8;
             const cy=py+5+(x*5+y*2)%6;
             rect(cx,cy,1,2,'#1a1e23');
@@ -437,7 +466,13 @@
       function draw() {
         const lightRadius = currentLightRadius();
         const showGameplayScene=active || dying || menu.classList.contains('game-over');
-        drawGround(lightRadius,showGameplayScene);
+        const cameraMaxX=Math.max(0,worldWidth-W), cameraMaxY=Math.max(0,worldHeight-H);
+        camera.x=Math.round(Math.max(0,Math.min(cameraMaxX,player.x+player.w/2-W/2)));
+        camera.y=Math.round(Math.max(0,Math.min(cameraMaxY,player.y+player.h/2-H/2)));
+        ctx.clearRect(0,0,W,H);
+        ctx.save();
+        ctx.translate(-camera.x,-camera.y);
+        drawGround(lightRadius,showGameplayScene,camera.x,camera.y);
         for (const wall of walls) {
           drawBrickWall(wall);
         }
@@ -505,6 +540,7 @@
           ctx.fillStyle = glow;
           ctx.fillRect(lightX - lightRadius, lightY - lightRadius, lightRadius * 2, lightRadius * 2);
         }
+        ctx.restore();
       }
       function drawCrate(crate) {
         const x=Math.round(crate.x), y=Math.round(crate.y), size=crate.w;
@@ -792,6 +828,7 @@
       }
       function startGame() {
         setCrateSlideSound(false);
+        configureLevelMap(currentLevel);
         levelIntroActive=false;
         levelCompleteActive=false;
         keys.clear();
@@ -898,6 +935,7 @@
       }
       function showMainMenu() {
         setCrateSlideSound(false);
+        configureLevelMap(1);
         levelIntroActive=false;
         levelCompleteActive=false;
         active = false;
@@ -977,13 +1015,13 @@
       function spawnZombie() {
         const spawnDistance = 70;
         let zombie;
-        // Choose a direction that keeps the full zombie inside the room, without shortening the spawn distance.
+        // Keep spawned zombies inside the current level and clear of its walls.
         for (let attempt = 0; attempt < 100; attempt++) {
           const angle = Math.random() * Math.PI * 2;
           const x = player.x + Math.cos(angle) * spawnDistance;
           const y = player.y + Math.sin(angle) * spawnDistance;
-          if (x >= TILE + 1 && x + player.w <= W - TILE - 1 && y >= TILE + 1 && y + player.h <= H - TILE - 1
-              && !crates.some(crate => overlaps(x,y,player,crate))) {
+          if (x >= TILE + 1 && x + player.w <= worldWidth - TILE - 1 && y >= TILE + 1 && y + player.h <= worldHeight - TILE - 1
+              && !blocked(x,y) && !crates.some(crate => overlaps(x,y,player,crate))) {
             const roll = Math.random();
             const look = roll < 0.72 ? 0 : roll < 0.94 ? 1 : 2;
             zombie = {
@@ -997,7 +1035,7 @@
             break;
           }
         }
-        // At least one valid 70-pixel direction is available throughout this room.
+        // At least one valid 70-pixel direction is available throughout this map.
         if (!zombie) return;
         zombies.push(zombie);
       }
@@ -1015,7 +1053,7 @@
       function spawnCrate() {
         const crate={x:0,y:0,w:14,h:14};
         const spots=[];
-        for (let y=1;y<12;y++) for(let x=1;x<19;x++) spots.push({x:x*TILE+1,y:y*TILE+1});
+        for (let y=1;y<worldRows-1;y++) for(let x=1;x<worldCols-1;x++) spots.push({x:x*TILE+1,y:y*TILE+1});
         for(let i=spots.length-1;i>0;i--) {
           const j=Math.floor(Math.random()*(i+1));
           [spots[i],spots[j]]=[spots[j],spots[i]];
