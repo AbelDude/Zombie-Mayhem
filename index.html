@@ -27,16 +27,15 @@
     button:hover, button:focus-visible { background: #e0e8b3; transform: translate(-1px,-1px); box-shadow: 5px 5px #526653; outline: none; }
     .hud { display: none; position: absolute; inset: 12px 14px auto; justify-content: space-between; align-items: flex-start; pointer-events: none; color: #eef1d8; font-size: 10px; text-shadow: 2px 2px #17211e; }
     .hud span { background: #17211ebd; padding: 7px 9px; }
-    .hud #score-display { color: #a62f36; background: transparent; font-size: 20px; font-weight: 900; -webkit-text-stroke: .45px #a62f36; letter-spacing: .03em; padding: 7px 10px; text-shadow: 1px 1px #171316; }
-    .hint { margin-top: 12px; text-align: center; color: #80918a; font-size: 12px; }
-    @media (max-width: 560px) { body { padding: 12px; } header { font-size: 10px; } .hint { line-height: 1.6; } }
+    .hud #score-display { margin-left: auto; color: #a62f36; background: transparent; font-size: 20px; font-weight: 900; -webkit-text-stroke: .45px #a62f36; letter-spacing: .03em; padding: 7px 10px; text-shadow: 1px 1px #171316; }
+    @media (max-width: 560px) { body { padding: 12px; } header { font-size: 10px; } }
   </style>
 </head>
 <body>
   <main class="shell">
     <header><span class="brand">✦ ZOMBIE MAYHEM</span><span>PIXEL ADVENTURE · 01</span></header>
     <div class="frame">
-      <canvas id="game" width="320" height="200" aria-label="Little Grove game"></canvas>
+      <canvas id="game" width="320" height="208" aria-label="Zombie Mayhem game"></canvas>
       <div class="menu" id="menu">
         <h1 id="menu-title">ZOMBIE MAYHEM</h1>
         <p id="menu-copy"></p>
@@ -47,9 +46,8 @@
           <button id="to-menu" class="secondary" hidden>Back to Menu</button>
         </div>
       </div>
-      <div class="hud" id="hud"><span>ARROWS MOVE · WASD AIM · SPACE FIRE</span><span id="score-display">KILLS · 0</span></div>
+      <div class="hud" id="hud"><span id="score-display">KILLS · 0</span></div>
     </div>
-    <div class="hint">Arrow keys move · WASD aim in 8 directions · Space fires · 1 second between shots</div>
   </main>
   <script>
     (() => {
