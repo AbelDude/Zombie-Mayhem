@@ -84,6 +84,7 @@
       const player = { x: 2 * TILE + 3, y: 9 * TILE + 3, w: 10, h: 11, speed: 1.35, step: 0, facing: 1, view: 'side' };
       const zombies = [];
       const crates = [];
+      const crateDebris = [];
       const zombieLooks = [
         { coatBase:'#394d3d', coat:'#506547', coatLight:'#708052', belt:'#303633', buckle:'#9b8f5d', sleeve:'#506447', cuff:'#809065', skin:'#91a37a', skinShade:'#738660', hair:'#373d37', hairLight:'#50584a', backHair:'#596b50', backHairLight:'#839166', backLine:'#3c4a3d', backAccent:'#66764d', backMark:'#81875d', eye:'#e76c5d', mouth:'#333c31', tear:'#889168', sideMouth:'#59684a' },
         { coatBase:'#394959', coat:'#4b6479', coatLight:'#6e8597', belt:'#293b4a', buckle:'#83bfbe', sleeve:'#43596d', cuff:'#7e9ba5', skin:'#92b6b3', skinShade:'#6c9490', hair:'#343f47', hairLight:'#5f7675', backHair:'#54746c', backHairLight:'#86a39b', backLine:'#3c5651', backAccent:'#5a7268', backMark:'#77938a', eye:'#85eff1', mouth:'#2d4544', tear:'#789a8a', sideMouth:'#54736a' },
@@ -371,6 +372,19 @@
             ctx.restore();
           }
         }
+        for (const bit of crateDebris) {
+          const age=performance.now()-bit.bornAt;
+          const remaining=Math.max(0,1-age/bit.life);
+          const distance=Math.hypot(bit.x-player.x-player.w/2,bit.y-player.y-player.h/2);
+          const lightFade=Math.max(0,Math.min(1,(lightRadius-distance)/10));
+          const lightOpacity=lightFade*lightFade*(3-2*lightFade);
+          if (remaining>0 && lightOpacity>0) {
+            ctx.save();
+            ctx.globalAlpha=remaining*lightOpacity;
+            rect(bit.x,bit.y,bit.size,bit.size,bit.color);
+            ctx.restore();
+          }
+        }
         drawPlayer();
         // Keep a small pool of warm light centered on the player in the dark room.
         const lightX = player.x + player.w / 2;
@@ -448,6 +462,7 @@
         if(dx || dy) player.step++;
         updateZombies();
         updateBullets();
+        updateCrateDebris();
       }
       function updateAim() {
         let x = 0, y = 0;
@@ -490,7 +505,8 @@
           }
           const crateIndex=crates.findIndex(crate => bullet.x >= crate.x && bullet.x <= crate.x+crate.w && bullet.y >= crate.y && bullet.y <= crate.y+crate.h);
           if (crateIndex >= 0) {
-            crates.splice(crateIndex,1);
+            const [crate]=crates.splice(crateIndex,1);
+            scatterCrate(crate);
             bullets.splice(i, 1);
             continue;
           }
@@ -507,6 +523,36 @@
               scoreDisplay.textContent = `KILLS · ${zombiesKilled}`;
             }
           }
+        }
+      }
+      function scatterCrate(crate) {
+        const colors=['#d5a15b','#b47a43','#79512f','#e3b768','#65452f'];
+        const now=performance.now();
+        for(let i=0;i<12;i++) {
+          crateDebris.push({
+            x:crate.x+crate.w/2+(Math.random()-0.5)*6,
+            y:crate.y+crate.h/2+(Math.random()-0.5)*6,
+            vx:(Math.random()-0.5)*2.8,
+            vy:(Math.random()-0.5)*2.8-0.35,
+            size:Math.random()<0.65?2:3,
+            color:colors[Math.floor(Math.random()*colors.length)],
+            bornAt:now,
+            life:2200+Math.random()*800
+          });
+        }
+      }
+      function updateCrateDebris() {
+        const now=performance.now();
+        for(let i=crateDebris.length-1;i>=0;i--) {
+          const bit=crateDebris[i];
+          if(now-bit.bornAt>=bit.life) {
+            crateDebris.splice(i,1);
+            continue;
+          }
+          bit.x+=bit.vx;
+          bit.y+=bit.vy;
+          bit.vx*=0.98;
+          bit.vy=bit.vy*0.98+0.025;
         }
       }
       function updateZombies() {
@@ -577,6 +623,7 @@
         bullets.length = 0;
         zombies.length = 0;
         crates.length = 0;
+        crateDebris.length = 0;
         nextCrateKillThreshold = 2;
         zombiesKilled = 0;
         dying = false;
@@ -639,6 +686,7 @@
         bullets.length = 0;
         zombies.length = 0;
         crates.length = 0;
+        crateDebris.length = 0;
         nextCrateKillThreshold = 2;
         music.pause();
         music.currentTime = 0;
