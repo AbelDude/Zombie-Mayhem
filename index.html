@@ -201,7 +201,9 @@
             const verticalDivider = roomCount === 2 && x === roomCols - 1;
             const horizontalDivider = roomCount === 2 && y === roomRows - 1;
             if (outerWall) addWall(x, y);
-            if (verticalDivider && ![5, 6].includes(y % roomRows)) addWall(x, y);
+            // Close the upper passage from the spawn room; the right side is reached by going down, across, then up.
+            const lowerPassage = y >= roomRows && [5, 6].includes(y % roomRows);
+            if (verticalDivider && !lowerPassage) addWall(x, y);
             if (horizontalDivider && ![9, 10].includes(x % roomCols)) addWall(x, y);
           }
         }
