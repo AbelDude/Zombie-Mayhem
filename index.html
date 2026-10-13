@@ -568,6 +568,21 @@
       }
       function drawCrate(crate) {
         const x=Math.round(crate.x), y=Math.round(crate.y), size=crate.w;
+        if (crate.indestructible) {
+          rect(x,y,size,size,'#252d32');
+          rect(x+1,y+1,size-2,size-2,'#65747a');
+          rect(x+2,y+2,size-4,size-4,'#46545a');
+          rect(x+3,y+3,size-6,2,'#89979b');
+          rect(x+3,y+size-5,size-6,2,'#303b41');
+          rect(x+3,y+3,2,size-6,'#89979b');
+          rect(x+size-5,y+3,2,size-6,'#303b41');
+          rect(x+5,y+5,size-10,size-10,'#58676c');
+          rect(x+4,y+4,1,1,'#c0c9bd');
+          rect(x+size-5,y+4,1,1,'#c0c9bd');
+          rect(x+4,y+size-5,1,1,'#c0c9bd');
+          rect(x+size-5,y+size-5,1,1,'#c0c9bd');
+          return;
+        }
         rect(x,y,size,size,'#513d2b');
         rect(x+1,y+1,size-2,size-2,'#9a7041');
         rect(x+2,y+2,size-4,2,'#bd9257');
@@ -703,12 +718,15 @@
           }
           const crateIndex=crates.findIndex(crate => bullet.x >= crate.x && bullet.x <= crate.x+crate.w && bullet.y >= crate.y && bullet.y <= crate.y+crate.h);
           if (crateIndex >= 0) {
-            const [crate]=crates.splice(crateIndex,1);
-            scatterCrate(crate);
-            if (currentLevel === 2) releaseCrateDrop(crate);
-            crateDestroySound.currentTime = 0;
-            const playback=crateDestroySound.play();
-            if (playback) playback.catch(() => {});
+            const crate=crates[crateIndex];
+            if (!crate.indestructible) {
+              crates.splice(crateIndex,1);
+              scatterCrate(crate);
+              if (currentLevel === 2) releaseCrateDrop(crate);
+              crateDestroySound.currentTime = 0;
+              const playback=crateDestroySound.play();
+              if (playback) playback.catch(() => {});
+            }
             bullets.splice(i, 1);
             continue;
           }
@@ -898,6 +916,7 @@
         scoreDisplay.textContent = 'KILLS · 0';
         player.x = Math.floor((W-player.w)/2);
         player.y = Math.floor((H-player.h)/2);
+        if (currentLevel === 2) spawnMetalCrate();
         player.facing = 1;
         player.view = 'side';
         aim.x = 1;
@@ -1127,9 +1146,18 @@
         }
         return false;
       }
+      function spawnMetalCrate() {
+        const crate={
+          x:roomCols*TILE/2-7,
+          y:roomRows*TILE+roomRows*TILE/2-7,
+          w:14,h:14,indestructible:true
+        };
+        if (canMoveCrate(crate,crate.x,crate.y)) crates.push(crate);
+      }
       function checkCrateSpawns() {
         while (zombiesKilled >= nextCrateKillThreshold) {
-          if (crates.length < 2 && !spawnCrate()) return;
+          const normalCrates=crates.filter(crate => !crate.indestructible).length;
+          if (normalCrates < 2 && !spawnCrate()) return;
           nextCrateKillThreshold += 2;
         }
       }
