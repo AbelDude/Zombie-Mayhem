@@ -1125,6 +1125,11 @@
       restart.addEventListener('click', startGame);
       toMenu.addEventListener('click', showMainMenu);
       window.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key === 'Tab' && !e.repeat) {
+          e.preventDefault();
+          beginLevelIntro(2);
+          return;
+        }
         if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Spacebar'].includes(e.key)) e.preventDefault();
         if (!active || dying) return;
         if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) keys.add(e.key);
