@@ -45,6 +45,7 @@
         <div class="menu-actions">
           <button id="start" class="secondary">Start Game</button>
           <button id="rules" class="secondary">Rules</button>
+          <button id="levels" class="secondary">Levels</button>
           <button id="restart" class="secondary" hidden>Restart</button>
           <button id="to-menu" class="secondary" hidden>Back to Menu</button>
         </div>
@@ -72,6 +73,7 @@
       const hud = document.querySelector('#hud');
       const start = document.querySelector('#start');
       const rules = document.querySelector('#rules');
+      const levels = document.querySelector('#levels');
       const restart = document.querySelector('#restart');
       const toMenu = document.querySelector('#to-menu');
       const menuTitle = document.querySelector('#menu-title');
@@ -660,6 +662,7 @@
         menu.hidden = true;
         menuCopy.classList.remove('rules-copy');
         rules.hidden = true;
+        levels.hidden = true;
         hud.style.display = 'flex';
         active = true;
         last = performance.now();
@@ -684,6 +687,7 @@
         menu.classList.add('game-over');
         start.hidden = true;
         rules.hidden = true;
+        levels.hidden = true;
         restart.hidden = false;
         toMenu.hidden = false;
         menu.hidden = false;
@@ -722,6 +726,7 @@
         menu.classList.remove('game-over');
         start.hidden = false;
         rules.hidden = false;
+        levels.hidden = false;
         rules.textContent = 'Rules';
         restart.hidden = true;
         toMenu.hidden = true;
@@ -734,6 +739,7 @@
           menuCopy.textContent = '';
           menuCopy.classList.remove('rules-copy');
           start.hidden = false;
+          levels.hidden = false;
           rules.textContent = 'Rules';
           return;
         }
@@ -741,6 +747,7 @@
         menuCopy.textContent = 'Arrow keys  ·  Move\nW A S D  ·  Aim your revolver\nSpace  ·  Fire (1 second between shots)\n\nSurvive the zombie horde and earn kills. Different zombies take different numbers of hits. Stay alert: the light shrinks as your kill count rises.\n\nA crate appears every 2 kills when there is room, with a maximum of 2 at a time. Run into a crate to push it; pushing slows you by 50%. Crates block zombies. Shoot crates to break them.';
         menuCopy.classList.add('rules-copy');
         start.hidden = true;
+        levels.hidden = true;
         rules.textContent = 'Back to Menu';
       });
       restart.addEventListener('click', startGame);
