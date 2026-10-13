@@ -20,7 +20,8 @@
     .menu #menu-copy.rules-copy { max-width: 270px; white-space: pre-line; line-height: 1.55; color: #d8dec8; }
     .menu.game-over p { color: #e9edcf; font-size: clamp(22px, 5vw, 32px); font-weight: bold; text-shadow: 2px 2px #40584a; }
     .menu-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
-    .menu button.locked-level { position: relative; width: 138px; height: 78px; padding: 0; overflow: hidden; }
+    .menu button.level-button { width: 138px; height: 78px; padding: 0; }
+    .menu button.locked-level { position: relative; overflow: hidden; }
     .locked-level svg { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
     .locked-level .level-label { position: absolute; z-index: 1; top: 4px; left: 0; right: 0; color: #d8dec8; font-size: 12px; text-align: center; text-shadow: 1px 1px #17211e; }
     .menu [hidden] { display: none; }
@@ -55,8 +56,8 @@
           <button id="to-menu" class="secondary" hidden>Back to Menu</button>
         </div>
         <div class="menu-actions" id="levels-actions" hidden>
-          <button id="level-1" class="secondary">Level 1</button>
-          <button class="secondary locked-level" aria-label="Level 2 locked" disabled>
+          <button id="level-1" class="secondary level-button">Level 1</button>
+          <button class="secondary level-button locked-level" aria-label="Level 2 locked" disabled>
             <span class="level-label">Level 2</span>
             <svg viewBox="0 0 138 78" shape-rendering="crispEdges" aria-hidden="true">
               <defs>
@@ -79,7 +80,7 @@
               <rect x="67" y="43" width="4" height="7" fill="#d8c886"/>
             </svg>
           </button>
-          <button class="secondary locked-level" aria-label="Level 3 locked" disabled>
+          <button class="secondary level-button locked-level" aria-label="Level 3 locked" disabled>
             <span class="level-label">Level 3</span>
             <svg viewBox="0 0 138 78" shape-rendering="crispEdges" aria-hidden="true">
               <defs>
@@ -102,7 +103,7 @@
               <rect x="67" y="43" width="4" height="7" fill="#d8c886"/>
             </svg>
           </button>
-          <button class="secondary locked-level" aria-label="Level 4 locked" disabled>
+          <button class="secondary level-button locked-level" aria-label="Level 4 locked" disabled>
             <span class="level-label">Level 4</span>
             <svg viewBox="0 0 138 78" shape-rendering="crispEdges" aria-hidden="true">
               <defs>
