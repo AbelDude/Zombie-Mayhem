@@ -424,7 +424,7 @@
         const yCrate=dy ? crateInWay(player.x,intendedY) : null;
         const canPushX=xCrate && canMoveCrate(xCrate,xCrate.x+dx*player.speed,xCrate.y);
         const canPushY=yCrate && canMoveCrate(yCrate,yCrate.x,yCrate.y+dy*player.speed);
-        const moveSpeed=(canPushX || canPushY) ? player.speed*0.7 : player.speed;
+        const moveSpeed=(canPushX || canPushY) ? player.speed*0.5 : player.speed;
         const nx=player.x+dx*moveSpeed, ny=player.y+dy*moveSpeed;
         if(!blocked(nx,player.y)) {
           const crate=crateInWay(nx,player.y);
@@ -661,7 +661,7 @@
           return;
         }
         menuTitle.textContent = 'HOW TO PLAY';
-        menuCopy.textContent = 'Arrow keys  ·  Move\nW A S D  ·  Aim your revolver\nSpace  ·  Fire (1 second between shots)\n\nSurvive the zombie horde and earn kills. Different zombies take different numbers of hits. Stay alert: the light shrinks as your kill count rises.\n\nCrates appear after 2 kills, then again 12 seconds later. Run into a crate to push it; pushing slows you down. Crates block zombies and bullets.';
+        menuCopy.textContent = 'Arrow keys  ·  Move\nW A S D  ·  Aim your revolver\nSpace  ·  Fire (1 second between shots)\n\nSurvive the zombie horde and earn kills. Different zombies take different numbers of hits. Stay alert: the light shrinks as your kill count rises.\n\nCrates appear after 2 kills, then again 12 seconds later. Run into a crate to push it; pushing slows you by 50%. Crates block zombies and bullets.';
         menuCopy.classList.add('rules-copy');
         start.hidden = true;
         rules.textContent = 'Back to Menu';
