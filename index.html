@@ -25,15 +25,15 @@
     .menu button.secondary:hover, .menu button.secondary:focus-visible { color: #17211e; background: #e0e8b3; box-shadow: 5px 5px #242e30; }
     button { border: 3px solid #d2daaa; padding: 13px 24px; color: #17211e; background: #c6d391; font: bold 15px "Courier New", monospace; text-transform: uppercase; cursor: pointer; box-shadow: 4px 4px #526653; }
     button:hover, button:focus-visible { background: #e0e8b3; transform: translate(-1px,-1px); box-shadow: 5px 5px #526653; outline: none; }
-    .hud { display: none; position: absolute; inset: 12px 14px auto; justify-content: space-between; align-items: flex-start; pointer-events: none; color: #eef1d8; font-size: 10px; text-shadow: 2px 2px #17211e; }
+    .hud { display: none; position: absolute; inset: auto 0 17px; justify-content: center; align-items: flex-end; pointer-events: none; color: #eef1d8; font-size: 10px; text-shadow: 2px 2px #17211e; }
     .hud span { background: #17211ebd; padding: 7px 9px; }
-    .hud #score-display { margin-left: auto; color: #a62f36; background: transparent; font-size: 20px; font-weight: 900; -webkit-text-stroke: .45px #a62f36; letter-spacing: .03em; padding: 7px 10px; text-shadow: 1px 1px #171316; }
+    .hud #score-display { margin-left: auto; margin-right: auto; color: #a62f36; background: transparent; font-size: 30px; font-weight: 900; -webkit-text-stroke: .6px #a62f36; letter-spacing: .03em; padding: 4px 10px; text-shadow: 1px 1px #171316; }
     @media (max-width: 560px) { body { padding: 12px; } header { font-size: 10px; } }
   </style>
 </head>
 <body>
   <main class="shell">
-    <header><span class="brand">✦ ZOMBIE MAYHEM</span><span>PIXEL ADVENTURE · 01</span></header>
+    <header><span class="brand">✦ ZOMBIE MAYHEM</span></header>
     <div class="frame">
       <canvas id="game" width="320" height="208" aria-label="Zombie Mayhem game"></canvas>
       <div class="menu" id="menu">
