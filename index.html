@@ -205,6 +205,17 @@
             if (horizontalDivider && ![9, 10].includes(x % roomCols)) addWall(x, y);
           }
         }
+        if (level === 2) {
+          const interiorObstacles = [
+            // Upper-right room.
+            { x: 26, y: 4 }, { x: 27, y: 4 }, { x: 28, y: 4 }, { x: 34, y: 7 }, { x: 34, y: 8 },
+            // Lower-left room.
+            { x: 3, y: 19 }, { x: 4, y: 19 }, { x: 5, y: 19 }, { x: 14, y: 22 }, { x: 14, y: 23 },
+            // Lower-right room.
+            { x: 26, y: 21 }, { x: 27, y: 21 }, { x: 28, y: 21 }, { x: 35, y: 16 }, { x: 35, y: 17 }
+          ];
+          for (const obstacle of interiorObstacles) addWall(obstacle.x, obstacle.y);
+        }
         wallSet = wallKeys;
         camera.x = 0;
         camera.y = 0;
