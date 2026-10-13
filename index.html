@@ -257,7 +257,6 @@
         rect(0,0,worldWidth,worldHeight,'#20242a');
         const cracks=new Set(['2,2','8,3','15,4','5,7','12,8','16,10']);
         for (let y=0; y<worldRows; y++) for (let x=0; x<worldCols; x++) {
-          if (!cracks.has(`${x % roomCols},${y % roomRows}`)) continue;
           const px=x*TILE, py=y*TILE;
           const shade=(x*7+y*11)%4;
           const tile=['#292d33','#2c3036','#272b31','#30343a'][shade];
