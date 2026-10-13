@@ -649,8 +649,8 @@
         zombiesKilled = 0;
         dying = false;
         scoreDisplay.textContent = 'KILLS · 0';
-        player.x = 2 * TILE + 3;
-        player.y = 9 * TILE + 3;
+        player.x = Math.floor((W-player.w)/2);
+        player.y = Math.floor((H-player.h)/2);
         player.facing = 1;
         player.view = 'side';
         aim.x = 1;
@@ -713,8 +713,8 @@
         nextCrateKillThreshold = 2;
         music.pause();
         music.currentTime = 0;
-        player.x = 2 * TILE + 3;
-        player.y = 9 * TILE + 3;
+        player.x = Math.floor((W-player.w)/2);
+        player.y = Math.floor((H-player.h)/2);
         hud.style.display = 'none';
         menuTitle.textContent = 'ZOMBIE MAYHEM';
         menuCopy.textContent = '';
@@ -802,7 +802,10 @@
           [spots[i],spots[j]]=[spots[j],spots[i]];
         }
         for(const spot of spots) {
-          if(Math.hypot(spot.x-player.x,spot.y-player.y)<40) continue;
+          const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
+          const nearestX=Math.max(spot.x,Math.min(lightX,spot.x+crate.w));
+          const nearestY=Math.max(spot.y,Math.min(lightY,spot.y+crate.h));
+          if(Math.hypot(nearestX-lightX,nearestY-lightY)<=currentLightRadius()) continue;
           if(!canMoveCrate(crate,spot.x,spot.y)) continue;
           crate.x=spot.x;
           crate.y=spot.y;
