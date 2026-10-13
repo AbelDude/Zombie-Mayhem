@@ -30,6 +30,8 @@
     .locked-level svg { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
     .locked-level .chain-art { opacity: 1; transition: opacity .9s linear; }
     .locked-level.unlocked .chain-art { opacity: 0; }
+    .locked-level svg > path, .locked-level svg > rect { transition: opacity .9s linear; }
+    .locked-level.unlocked svg > path, .locked-level.unlocked svg > rect { opacity: 0; }
     .locked-level .level-label { position: absolute; z-index: 1; top: 4px; left: 0; right: 0; color: #d8dec8; font-size: 12px; text-align: center; text-shadow: 1px 1px #17211e; }
     .menu [hidden] { display: none; }
     .menu button.secondary { color: #d8dec8; background: #394447; border-color: #74817a; box-shadow: 4px 4px #242e30; }
