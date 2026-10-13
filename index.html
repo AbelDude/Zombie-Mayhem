@@ -60,6 +60,9 @@
       gunshot.volume = 0.6;
       const punchSound = new Audio('./Hard Punch.mp3');
       punchSound.preload = 'auto';
+      const crateSlideSound = new Audio('./sliding-chair-47711.mp3');
+      crateSlideSound.loop = true;
+      crateSlideSound.preload = 'auto';
       const music = new Audio('./Looming Doom.m4a');
       music.loop = true;
       music.preload = 'auto';
@@ -426,7 +429,18 @@
         for (let ty=top; ty<=bottom; ty++) for (let tx=left; tx<=right; tx++) if (wallSet.has(`${tx},${ty}`)) return true;
         return false;
       }
+      function setCrateSlideSound(shouldPlay) {
+        if (shouldPlay && crateSlideSound.paused) {
+          crateSlideSound.currentTime = 0;
+          const playback=crateSlideSound.play();
+          if (playback) playback.catch(() => {});
+        } else if (!shouldPlay && !crateSlideSound.paused) {
+          crateSlideSound.pause();
+          crateSlideSound.currentTime = 0;
+        }
+      }
       function update() {
+        let pushedCrate=false;
         let dx=0,dy=0;
         if(keys.has('ArrowLeft')) {dx--;player.facing=0;}
         if(keys.has('ArrowRight')) {dx++;player.facing=1;}
@@ -448,7 +462,7 @@
           if (!crate) player.x=nx;
           else {
             const crateX=crate.x+dx*moveSpeed;
-            if (canMoveCrate(crate,crateX,crate.y)) { crate.x=crateX; player.x=nx; }
+            if (canMoveCrate(crate,crateX,crate.y)) { crate.x=crateX; player.x=nx; pushedCrate=true; }
           }
         }
         if(!blocked(player.x,ny)) {
@@ -456,13 +470,14 @@
           if (!crate) player.y=ny;
           else {
             const crateY=crate.y+dy*moveSpeed;
-            if (canMoveCrate(crate,crate.x,crateY)) { crate.y=crateY; player.y=ny; }
+            if (canMoveCrate(crate,crate.x,crateY)) { crate.y=crateY; player.y=ny; pushedCrate=true; }
           }
         }
         if(dx || dy) player.step++;
         updateZombies();
         updateBullets();
         updateCrateDebris();
+        setCrateSlideSound(pushedCrate && !dying);
       }
       function updateAim() {
         let x = 0, y = 0;
@@ -618,6 +633,7 @@
         draw(); requestAnimationFrame(loop);
       }
       function startGame() {
+        setCrateSlideSound(false);
         keys.clear();
         aimKeys.clear();
         bullets.length = 0;
@@ -669,6 +685,7 @@
       }
       function startDeathAnimation() {
         if (dying || gameOver) return;
+        setCrateSlideSound(false);
         dying = true;
         deathStartedAt = performance.now();
         punchSound.currentTime = 0;
@@ -679,6 +696,7 @@
         bullets.length = 0;
       }
       function showMainMenu() {
+        setCrateSlideSound(false);
         active = false;
         gameOver = false;
         keys.clear();
