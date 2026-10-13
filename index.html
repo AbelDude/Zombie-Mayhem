@@ -199,6 +199,7 @@
       let levelIntroActive = false, levelIntroStartedAt = 0, levelIntroFading = false;
       let levelCompleteActive = false, levelCompleteStartedAt = 0, levelCompleteFading = false;
       let level1Completed = false;
+      let currentLevel = 1;
       const levelIntroHoldDuration = 2000, levelIntroFadeDuration = 600;
       let nextCrateKillThreshold = 2;
       const deathAnimationDuration = 900;
@@ -645,7 +646,7 @@
               zombie.removeAt = zombie.lastHitAt + 480;
               zombiesKilled++;
               scoreDisplay.textContent = `KILLS · ${zombiesKilled}`;
-              if (zombiesKilled >= 8) {
+              if (zombiesKilled >= (currentLevel === 2 ? 12 : 8)) {
                 beginLevelComplete();
                 return;
               }
@@ -767,7 +768,8 @@
         if (dying && time - deathStartedAt >= deathAnimationDuration) endGame();
         draw(); requestAnimationFrame(loop);
       }
-      function beginLevelIntro() {
+      function beginLevelIntro(level = 1) {
+        currentLevel = level;
         setCrateSlideSound(false);
         levelCompleteActive=false;
         active=false;
@@ -776,8 +778,8 @@
         keys.clear();
         aimKeys.clear();
         hud.style.display='none';
-        menuTitle.textContent='LEVEL 1';
-        menuCopy.textContent='';
+        menuTitle.textContent=`LEVEL ${currentLevel}`;
+        menuCopy.textContent=currentLevel === 2 ? '12 KILLS · FASTER HORDE' : '';
         menuCopy.classList.remove('rules-copy');
         menu.classList.remove('game-over','fading','level-complete');
         menu.classList.add('level-intro');
@@ -850,7 +852,7 @@
       }
       function beginLevelComplete() {
         if (dying || gameOver || levelCompleteActive) return;
-        level1Completed = true;
+        if (currentLevel === 1) level1Completed = true;
         setCrateSlideSound(false);
         active=false;
         keys.clear();
@@ -858,7 +860,7 @@
         bullets.length=0;
         hud.style.display='none';
         menuTitle.textContent='COMPLETE';
-        menuCopy.textContent='';
+        menuCopy.textContent=currentLevel === 2 ? 'LEVEL 2 · 12 KILLS' : '';
         menuCopy.classList.remove('rules-copy');
         menu.classList.remove('game-over','level-intro','fading');
         menu.classList.add('level-complete');
@@ -926,8 +928,11 @@
         toMenu.hidden = true;
         menu.hidden = false;
       }
-      start.addEventListener('click', beginLevelIntro);
-      level1.addEventListener('click', beginLevelIntro);
+      start.addEventListener('click', () => beginLevelIntro(1));
+      level1.addEventListener('click', () => beginLevelIntro(1));
+      level2.addEventListener('click', () => {
+        if (!level2.disabled) beginLevelIntro(2);
+      });
       levels.addEventListener('click', () => {
         showLevelsPage();
       });
@@ -998,7 +1003,10 @@
       }
 
       function checkZombieSpawn(time) {
-        const spawnInterval = Math.max(1500, 6000 - Math.floor((time - gameStartedAt) / 45000) * 1000);
+        const elapsedStages = Math.floor((time - gameStartedAt) / (currentLevel === 2 ? 30000 : 45000));
+        const spawnInterval = currentLevel === 2
+          ? Math.max(1200, 4200 - elapsedStages * 700)
+          : Math.max(1500, 6000 - elapsedStages * 1000);
         if (!active || time - lastZombieSpawn < spawnInterval) return;
         spawnZombie();
         lastZombieSpawn = time;
