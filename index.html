@@ -180,7 +180,7 @@
       let walls = [];
       let wallSet = new Set();
       const camera = { x: 0, y: 0 };
-      const pressureButton = { x: 2 * TILE, y: roomRows * TILE + 6 * TILE + 4, w: 16, h: 8 };
+      const pressureButton = { x: 2 * TILE + 2, y: roomRows * TILE + 6 * TILE + 2, w: 12, h: 12 };
       const lowerDoorTiles = [
         { x: roomCols - 1, y: roomRows + 5 },
         { x: roomCols - 1, y: roomRows + 6 }
@@ -620,11 +620,13 @@
       }
       function drawPressureButton() {
         const {x,y,w,h}=pressureButton;
-        rect(x,y+2,w,h-2,'#626a6d');
-        rect(x+1,y+1,w-2,h-2,'#9aa3a5');
-        rect(x+2,y,w-4,3,'#d2d8d8');
-        rect(x+3,y+3,w-6,2,pressureButtonActive?'#848e91':'#b8c0c1');
-        rect(x+2,y+h-2,w-4,1,'#737c7f');
+        rect(x+1,y+1,w-2,h-2,'#586165');
+        rect(x+2,y+2,w-4,h-4,'#9aa3a5');
+        rect(x+3,y+3,w-6,h-6,pressureButtonActive?'#778184':'#c1c9ca');
+        rect(x+4,y+4,w-8,h-8,pressureButtonActive?'#727d80':'#d3d9d8');
+        rect(x+4,y+4,w-8,1,'#e3e7e5');
+        rect(x+4,y+h-5,w-8,1,'#687276');
+        rect(x+5,y+5,2,2,pressureButtonActive?'#717b7e':'#e7ebea');
       }
       function drawDoorTile(wall) {
         const x=wall.x*TILE, y=wall.y*TILE;
