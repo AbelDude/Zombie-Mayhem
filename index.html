@@ -23,8 +23,10 @@
     .menu [hidden] { display: none; }
     .menu button.secondary { color: #d8dec8; background: #394447; border-color: #74817a; box-shadow: 4px 4px #242e30; }
     .menu button.secondary:hover, .menu button.secondary:focus-visible { color: #17211e; background: #e0e8b3; box-shadow: 5px 5px #242e30; }
+    .menu button:disabled { cursor: default; opacity: .72; }
     button { border: 3px solid #d2daaa; padding: 13px 24px; color: #17211e; background: #c6d391; font: bold 15px "Courier New", monospace; text-transform: uppercase; cursor: pointer; box-shadow: 4px 4px #526653; }
     button:hover, button:focus-visible { background: #e0e8b3; transform: translate(-1px,-1px); box-shadow: 5px 5px #526653; outline: none; }
+    .menu button:disabled:hover { color: #d8dec8; background: #394447; border-color: #74817a; box-shadow: 4px 4px #242e30; transform: none; }
     .hud { display: none; justify-content: flex-start; align-items: center; pointer-events: none; color: #eef1d8; font-size: 10px; text-shadow: 2px 2px #17211e; }
     .hud span { background: #17211ebd; padding: 7px 9px; }
     .hud #score-display { color: #a62f36; background: transparent; font-size: 30px; font-weight: 900; -webkit-text-stroke: .6px #a62f36; letter-spacing: .03em; padding: 4px 0; text-shadow: 1px 1px #171316; }
@@ -42,12 +44,19 @@
       <div class="menu" id="menu">
         <h1 id="menu-title">ZOMBIE MAYHEM</h1>
         <p id="menu-copy"></p>
-        <div class="menu-actions">
+        <div class="menu-actions" id="home-actions">
           <button id="start" class="secondary">Start Game</button>
           <button id="rules" class="secondary">Rules</button>
           <button id="levels" class="secondary">Levels</button>
           <button id="restart" class="secondary" hidden>Restart</button>
           <button id="to-menu" class="secondary" hidden>Back to Menu</button>
+        </div>
+        <div class="menu-actions" id="levels-actions" hidden>
+          <button class="secondary" disabled>Level 1</button>
+          <button class="secondary" disabled>Level 2</button>
+          <button class="secondary" disabled>Level 3</button>
+          <button class="secondary" disabled>Level 4</button>
+          <button id="levels-back" class="secondary">Back to Menu</button>
         </div>
       </div>
     </div>
@@ -74,6 +83,9 @@
       const start = document.querySelector('#start');
       const rules = document.querySelector('#rules');
       const levels = document.querySelector('#levels');
+      const homeActions = document.querySelector('#home-actions');
+      const levelsActions = document.querySelector('#levels-actions');
+      const levelsBack = document.querySelector('#levels-back');
       const restart = document.querySelector('#restart');
       const toMenu = document.querySelector('#to-menu');
       const menuTitle = document.querySelector('#menu-title');
@@ -664,6 +676,8 @@
         gameOver = false;
         menu.classList.remove('game-over');
         menu.hidden = true;
+        homeActions.hidden = false;
+        levelsActions.hidden = true;
         menuCopy.classList.remove('rules-copy');
         rules.hidden = true;
         levels.hidden = true;
@@ -689,6 +703,8 @@
         menuTitle.textContent = 'YOU GOT ZOMBI-ED';
         menuCopy.textContent = `You killed ${zombiesKilled} ${zombiesKilled === 1 ? 'zombie' : 'zombies'}.`;
         menu.classList.add('game-over');
+        homeActions.hidden = false;
+        levelsActions.hidden = true;
         start.hidden = true;
         rules.hidden = true;
         levels.hidden = true;
@@ -728,6 +744,8 @@
         menuCopy.textContent = '';
         menuCopy.classList.remove('rules-copy');
         menu.classList.remove('game-over');
+        homeActions.hidden = false;
+        levelsActions.hidden = true;
         start.hidden = false;
         rules.hidden = false;
         levels.hidden = false;
@@ -737,6 +755,19 @@
         menu.hidden = false;
       }
       start.addEventListener('click', startGame);
+      levels.addEventListener('click', () => {
+        menuTitle.textContent = 'SELECT LEVEL';
+        menuCopy.textContent = '';
+        menuCopy.classList.remove('rules-copy');
+        homeActions.hidden = true;
+        levelsActions.hidden = false;
+      });
+      levelsBack.addEventListener('click', () => {
+        menuTitle.textContent = 'ZOMBIE MAYHEM';
+        menuCopy.textContent = '';
+        homeActions.hidden = false;
+        levelsActions.hidden = true;
+      });
       rules.addEventListener('click', () => {
         if (rules.textContent === 'Back to Menu') {
           menuTitle.textContent = 'ZOMBIE MAYHEM';
