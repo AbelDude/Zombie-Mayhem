@@ -119,9 +119,10 @@
       }
       function rect(x,y,w,h,c) { ctx.fillStyle = tintGameColor(c); ctx.fillRect(Math.round(x),Math.round(y),w,h); }
       function drawPlayerEye(x,y) { rect(x,y,1,1,'#293a35'); }
-      function drawGround(lightRadius) {
+      function drawGround(lightRadius, illuminated) {
         const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
         rect(0,0,W,H,'#171b24');
+        if (!illuminated) return;
         ctx.save();
         ctx.beginPath();
         ctx.arc(lightX,lightY,lightRadius,0,Math.PI*2);
@@ -336,7 +337,8 @@
       }
       function draw() {
         const lightRadius = currentLightRadius();
-        drawGround(lightRadius);
+        const showGameplayScene=active || dying || menu.classList.contains('game-over');
+        drawGround(lightRadius,showGameplayScene);
         for (const wall of walls) {
           drawBrickWall(wall);
         }
@@ -392,16 +394,18 @@
             ctx.restore();
           }
         }
-        drawPlayer();
-        // Keep a small pool of warm light centered on the player in the dark room.
-        const lightX = player.x + player.w / 2;
-        const lightY = player.y + player.h / 2;
-        const glow = ctx.createRadialGradient(lightX, lightY, 3, lightX, lightY, lightRadius);
-        glow.addColorStop(0, 'rgba(255, 230, 157, 0.34)');
-        glow.addColorStop(0.55, 'rgba(255, 220, 145, 0.16)');
-        glow.addColorStop(1, 'rgba(255, 210, 130, 0)');
-        ctx.fillStyle = glow;
-        ctx.fillRect(lightX - lightRadius, lightY - lightRadius, lightRadius * 2, lightRadius * 2);
+        if (showGameplayScene) {
+          drawPlayer();
+          // Keep a small pool of warm light centered on the player in the dark room.
+          const lightX = player.x + player.w / 2;
+          const lightY = player.y + player.h / 2;
+          const glow = ctx.createRadialGradient(lightX, lightY, 3, lightX, lightY, lightRadius);
+          glow.addColorStop(0, 'rgba(255, 230, 157, 0.34)');
+          glow.addColorStop(0.55, 'rgba(255, 220, 145, 0.16)');
+          glow.addColorStop(1, 'rgba(255, 210, 130, 0)');
+          ctx.fillStyle = glow;
+          ctx.fillRect(lightX - lightRadius, lightY - lightRadius, lightRadius * 2, lightRadius * 2);
+        }
       }
       function drawCrate(crate) {
         const x=Math.round(crate.x), y=Math.round(crate.y), size=crate.w;
