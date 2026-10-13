@@ -20,6 +20,9 @@
     .menu #menu-copy.rules-copy { max-width: 270px; white-space: pre-line; line-height: 1.55; color: #d8dec8; }
     .menu.game-over p { color: #e9edcf; font-size: clamp(22px, 5vw, 32px); font-weight: bold; text-shadow: 2px 2px #40584a; }
     .menu-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .menu button.locked-level { position: relative; width: 138px; height: 78px; padding: 0; overflow: hidden; }
+    .locked-level svg { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+    .locked-level .level-label { position: absolute; z-index: 1; top: 4px; left: 0; right: 0; color: #d8dec8; font-size: 12px; text-align: center; text-shadow: 1px 1px #17211e; }
     .menu [hidden] { display: none; }
     .menu button.secondary { color: #d8dec8; background: #394447; border-color: #74817a; box-shadow: 4px 4px #242e30; }
     .menu button.secondary:hover, .menu button.secondary:focus-visible { color: #17211e; background: #e0e8b3; box-shadow: 5px 5px #242e30; }
@@ -53,9 +56,42 @@
         </div>
         <div class="menu-actions" id="levels-actions" hidden>
           <button class="secondary" disabled>Level 1</button>
-          <button class="secondary" disabled>Level 2</button>
-          <button class="secondary" disabled>Level 3</button>
-          <button class="secondary" disabled>Level 4</button>
+          <button class="secondary locked-level" aria-label="Level 2 locked" disabled>
+            <span class="level-label">Level 2</span>
+            <svg viewBox="0 0 138 78" aria-hidden="true">
+              <g fill="none" stroke-linecap="square">
+                <path d="M65 39 7 7 M73 39 131 7 M65 43 7 71 M73 43 131 71" stroke="#20292b" stroke-width="5" stroke-dasharray="2 3"/>
+                <path d="M65 39 7 7 M73 39 131 7 M65 43 7 71 M73 43 131 71" stroke="#8a9690" stroke-width="2" stroke-dasharray="2 3"/>
+              </g>
+              <path d="M62 40V32a7 7 0 0 1 14 0v8" fill="none" stroke="#c7c9b5" stroke-width="4"/>
+              <rect x="59" y="38" width="20" height="17" fill="#283235" stroke="#b7aa77" stroke-width="2"/>
+              <rect x="67" y="43" width="4" height="7" fill="#d8c886"/>
+            </svg>
+          </button>
+          <button class="secondary locked-level" aria-label="Level 3 locked" disabled>
+            <span class="level-label">Level 3</span>
+            <svg viewBox="0 0 138 78" aria-hidden="true">
+              <g fill="none" stroke-linecap="square">
+                <path d="M65 39 7 7 M73 39 131 7 M65 43 7 71 M73 43 131 71" stroke="#20292b" stroke-width="5" stroke-dasharray="2 3"/>
+                <path d="M65 39 7 7 M73 39 131 7 M65 43 7 71 M73 43 131 71" stroke="#8a9690" stroke-width="2" stroke-dasharray="2 3"/>
+              </g>
+              <path d="M62 40V32a7 7 0 0 1 14 0v8" fill="none" stroke="#c7c9b5" stroke-width="4"/>
+              <rect x="59" y="38" width="20" height="17" fill="#283235" stroke="#b7aa77" stroke-width="2"/>
+              <rect x="67" y="43" width="4" height="7" fill="#d8c886"/>
+            </svg>
+          </button>
+          <button class="secondary locked-level" aria-label="Level 4 locked" disabled>
+            <span class="level-label">Level 4</span>
+            <svg viewBox="0 0 138 78" aria-hidden="true">
+              <g fill="none" stroke-linecap="square">
+                <path d="M65 39 7 7 M73 39 131 7 M65 43 7 71 M73 43 131 71" stroke="#20292b" stroke-width="5" stroke-dasharray="2 3"/>
+                <path d="M65 39 7 7 M73 39 131 7 M65 43 7 71 M73 43 131 71" stroke="#8a9690" stroke-width="2" stroke-dasharray="2 3"/>
+              </g>
+              <path d="M62 40V32a7 7 0 0 1 14 0v8" fill="none" stroke="#c7c9b5" stroke-width="4"/>
+              <rect x="59" y="38" width="20" height="17" fill="#283235" stroke="#b7aa77" stroke-width="2"/>
+              <rect x="67" y="43" width="4" height="7" fill="#d8c886"/>
+            </svg>
+          </button>
           <button id="levels-back" class="secondary">Back to Menu</button>
         </div>
       </div>
