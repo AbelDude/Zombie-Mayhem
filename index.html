@@ -57,6 +57,9 @@
       const ctx = canvas.getContext('2d');
       const gunshot = new Audio('./gunshot_001-82585.mp3');
       gunshot.preload = 'auto';
+      gunshot.volume = 0.6;
+      const punchSound = new Audio('./Hard Punch.mp3');
+      punchSound.preload = 'auto';
       const music = new Audio('./Looming Doom.m4a');
       music.loop = true;
       music.preload = 'auto';
@@ -621,6 +624,9 @@
         if (dying || gameOver) return;
         dying = true;
         deathStartedAt = performance.now();
+        punchSound.currentTime = 0;
+        const playback = punchSound.play();
+        if (playback) playback.catch(() => {});
         keys.clear();
         aimKeys.clear();
         bullets.length = 0;
