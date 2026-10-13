@@ -55,7 +55,7 @@
           <button id="to-menu" class="secondary" hidden>Back to Menu</button>
         </div>
         <div class="menu-actions" id="levels-actions" hidden>
-          <button class="secondary" disabled>Level 1</button>
+          <button id="level-1" class="secondary">Level 1</button>
           <button class="secondary locked-level" aria-label="Level 2 locked" disabled>
             <span class="level-label">Level 2</span>
             <svg viewBox="0 0 138 78" shape-rendering="crispEdges" aria-hidden="true">
@@ -155,6 +155,7 @@
       const homeActions = document.querySelector('#home-actions');
       const levelsActions = document.querySelector('#levels-actions');
       const levelsBack = document.querySelector('#levels-back');
+      const level1 = document.querySelector('#level-1');
       const restart = document.querySelector('#restart');
       const toMenu = document.querySelector('#to-menu');
       const menuTitle = document.querySelector('#menu-title');
@@ -824,6 +825,7 @@
         menu.hidden = false;
       }
       start.addEventListener('click', startGame);
+      level1.addEventListener('click', startGame);
       levels.addEventListener('click', () => {
         menuTitle.textContent = 'SELECT LEVEL';
         menuCopy.textContent = '';
