@@ -240,6 +240,7 @@
       const zombies = [];
       const crates = [];
       const lanterns = [];
+      let exitStaircase = null;
       const crateDebris = [];
       const zombieLooks = [
         { coatBase:'#394d3d', coat:'#506547', coatLight:'#708052', belt:'#303633', buckle:'#9b8f5d', sleeve:'#506447', cuff:'#809065', skin:'#91a37a', skinShade:'#738660', hair:'#373d37', hairLight:'#50584a', backHair:'#596b50', backHairLight:'#839166', backLine:'#3c4a3d', backAccent:'#66764d', backMark:'#81875d', eye:'#e76c5d', mouth:'#333c31', tear:'#889168', sideMouth:'#59684a' },
@@ -519,6 +520,19 @@
             ctx.restore();
           }
         }
+        if (currentLevel === 1 && exitStaircase && showGameplayScene) {
+          const stairX=exitStaircase.x+exitStaircase.w/2;
+          const stairY=exitStaircase.y+exitStaircase.h/2;
+          const distance=Math.hypot(stairX-(player.x+player.w/2),stairY-(player.y+player.h/2));
+          const fade=Math.max(0,Math.min(1,(lightRadius-distance)/10));
+          const opacity=fade*fade*(3-2*fade);
+          if (opacity>0) {
+            ctx.save();
+            ctx.globalAlpha=opacity;
+            drawStaircase(exitStaircase);
+            ctx.restore();
+          }
+        }
         if (active) {
           const lightX = player.x + player.w / 2;
           const lightY = player.y + player.h / 2;
@@ -630,6 +644,18 @@
         rect(x+3,y+11,6,2,'#a97838');
         rect(x+4,y+13,4,1,'#725231');
       }
+      function drawStaircase(staircase) {
+        const x=Math.round(staircase.x), y=Math.round(staircase.y), size=staircase.w;
+        rect(x,y,size,size,'#292f33');
+        rect(x+2,y+2,size-4,size-4,'#606a6f');
+        rect(x+4,y+3,size-8,4,'#b8c1c1');
+        rect(x+4,y+7,size-8,4,'#9ba5a7');
+        rect(x+4,y+11,size-8,4,'#7d888c');
+        rect(x+4,y+15,size-8,3,'#5d686d');
+        rect(x+5,y+3,2,15,'#d0d5d2');
+        rect(x+size-7,y+4,2,14,'#424c51');
+        rect(x+7,y+5,2,1,'#e4d39a');
+      }
       function drawPressureButton() {
         const {x,y,w,h}=pressureButton;
         rect(x+1,y+1,w-2,h-2,'#586165');
@@ -732,6 +758,11 @@
             lightRestoredAtKills=zombiesKilled;
           }
         }
+        if (currentLevel === 1 && exitStaircase && overlaps(player.x,player.y,player,exitStaircase)) {
+          exitStaircase=null;
+          beginLevelIntro(2);
+          return;
+        }
         updatePressureButton();
         if(dx || dy) player.step++;
         updateZombies();
@@ -803,7 +834,10 @@
               zombie.removeAt = zombie.lastHitAt + 480;
               zombiesKilled++;
               scoreDisplay.textContent = `KILLS · ${zombiesKilled}`;
-              if (zombiesKilled >= (currentLevel === 2 ? 12 : 8)) {
+              if (currentLevel === 1 && zombiesKilled >= 8) {
+                spawnLevelStaircase();
+                return;
+              } else if (currentLevel === 2 && zombiesKilled >= 12) {
                 beginLevelComplete();
                 return;
               }
@@ -959,6 +993,11 @@
         levelIntroStartedAt=performance.now();
         levelIntroActive=true;
       }
+      function spawnLevelStaircase() {
+        if (exitStaircase) return;
+        level1Completed=true;
+        exitStaircase={x:2*TILE,y:2*TILE,w:20,h:20};
+      }
       function startGame() {
         setCrateSlideSound(false);
         configureLevelMap(currentLevel);
@@ -970,6 +1009,7 @@
         zombies.length = 0;
         crates.length = 0;
         lanterns.length = 0;
+        exitStaircase = null;
         crateDebris.length = 0;
         nextCrateKillThreshold = 2;
         zombiesKilled = 0;
@@ -1082,6 +1122,7 @@
         zombies.length = 0;
         crates.length = 0;
         lanterns.length = 0;
+        exitStaircase = null;
         crateDebris.length = 0;
         nextCrateKillThreshold = 2;
         music.pause();
@@ -1183,6 +1224,7 @@
       }
 
       function checkZombieSpawn(time) {
+        if (currentLevel === 1 && zombiesKilled >= 8) return;
         const elapsedStages = Math.floor((time - gameStartedAt) / (currentLevel === 2 ? 30000 : 45000));
         const spawnInterval = currentLevel === 2
           ? Math.max(1200, 4200 - elapsedStages * 700)
