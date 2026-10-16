@@ -636,16 +636,16 @@
       }
       function drawStaircase(staircase) {
         const x=Math.round(staircase.x), y=Math.round(staircase.y), size=staircase.w;
-        const stepColors=['#818b8e','#737d80','#646e72','#535e62','#424d51','#323d41'];
+        const stepColors=['#818b8e','#646e72','#424d51'];
         rect(x,y,size,size,'#1d2428');
         rect(x+2,y+2,size-4,size-4,'#3b4549');
         rect(x+3,y+3,2,size-6,'#929c9e');
         rect(x+size-5,y+3,2,size-6,'#252d31');
-        for (let step=0; step<6; step++) {
-          const stepY=y+3+step*4;
-          rect(x+5,stepY,size-10,4,stepColors[step]);
+        for (let step=0; step<3; step++) {
+          const stepY=y+3+step*8;
+          rect(x+5,stepY,size-10,8,stepColors[step]);
           rect(x+5,stepY,size-10,1,step===0?'#a4adae':'#8b9597');
-          rect(x+5,stepY+3,size-10,1,'#293236');
+          rect(x+5,stepY+7,size-10,1,'#293236');
         }
       }
       function drawLitStaircase(staircase,lightRadius) {
