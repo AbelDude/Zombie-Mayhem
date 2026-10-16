@@ -506,7 +506,19 @@
           if (isLowerDoor) drawDoorTile(wall);
           else drawBrickWall(wall);
         }
-        if (currentLevel === 2 && showGameplayScene) drawPressureButton();
+        if (currentLevel === 2 && showGameplayScene) {
+          const buttonX=pressureButton.x+pressureButton.w/2;
+          const buttonY=pressureButton.y+pressureButton.h/2;
+          const distance=Math.hypot(buttonX-(player.x+player.w/2),buttonY-(player.y+player.h/2));
+          const fade=Math.max(0,Math.min(1,(lightRadius-distance)/10));
+          const opacity=fade*fade*(3-2*fade);
+          if (opacity>0) {
+            ctx.save();
+            ctx.globalAlpha=opacity;
+            drawPressureButton();
+            ctx.restore();
+          }
+        }
         if (active) {
           const lightX = player.x + player.w / 2;
           const lightY = player.y + player.h / 2;
