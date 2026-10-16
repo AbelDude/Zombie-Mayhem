@@ -834,7 +834,7 @@
               zombie.removeAt = zombie.lastHitAt + 480;
               zombiesKilled++;
               scoreDisplay.textContent = `KILLS · ${zombiesKilled}`;
-              if (currentLevel === 1 && zombiesKilled >= 8) {
+              if (currentLevel === 1 && zombiesKilled >= 1) {
                 spawnLevelStaircase();
                 return;
               } else if (currentLevel === 2 && zombiesKilled >= 12) {
@@ -1224,7 +1224,7 @@
       }
 
       function checkZombieSpawn(time) {
-        if (currentLevel === 1 && zombiesKilled >= 8) return;
+        if (currentLevel === 1 && zombiesKilled >= 1) return;
         const elapsedStages = Math.floor((time - gameStartedAt) / (currentLevel === 2 ? 30000 : 45000));
         const spawnInterval = currentLevel === 2
           ? Math.max(1200, 4200 - elapsedStages * 700)
