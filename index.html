@@ -646,15 +646,17 @@
       }
       function drawStaircase(staircase) {
         const x=Math.round(staircase.x), y=Math.round(staircase.y), size=staircase.w;
-        rect(x,y,size,size,'#292f33');
-        rect(x+2,y+2,size-4,size-4,'#606a6f');
-        rect(x+4,y+3,size-8,4,'#b8c1c1');
-        rect(x+4,y+7,size-8,4,'#9ba5a7');
-        rect(x+4,y+11,size-8,4,'#7d888c');
-        rect(x+4,y+15,size-8,3,'#5d686d');
-        rect(x+5,y+3,2,15,'#d0d5d2');
-        rect(x+size-7,y+4,2,14,'#424c51');
-        rect(x+7,y+5,2,1,'#e4d39a');
+        const stepColors=['#818b8e','#737d80','#646e72','#535e62','#424d51','#323d41'];
+        rect(x,y,size,size,'#1d2428');
+        rect(x+2,y+2,size-4,size-4,'#3b4549');
+        rect(x+3,y+3,2,size-6,'#929c9e');
+        rect(x+size-5,y+3,2,size-6,'#252d31');
+        for (let step=0; step<6; step++) {
+          const stepY=y+3+step*4;
+          rect(x+5,stepY,size-10,4,stepColors[step]);
+          rect(x+5,stepY,size-10,1,step===0?'#a4adae':'#8b9597');
+          rect(x+5,stepY+3,size-10,1,'#293236');
+        }
       }
       function drawPressureButton() {
         const {x,y,w,h}=pressureButton;
@@ -757,11 +759,6 @@
             lanterns.splice(i,1);
             lightRestoredAtKills=zombiesKilled;
           }
-        }
-        if (currentLevel === 1 && exitStaircase && overlaps(player.x,player.y,player,exitStaircase)) {
-          exitStaircase=null;
-          beginLevelIntro(2);
-          return;
         }
         updatePressureButton();
         if(dx || dy) player.step++;
@@ -996,7 +993,8 @@
       function spawnLevelStaircase() {
         if (exitStaircase) return;
         level1Completed=true;
-        exitStaircase={x:2*TILE,y:2*TILE,w:20,h:20};
+        const size=2*TILE;
+        exitStaircase={x:(W-size)/2,y:(H-size)/2,w:size,h:size};
       }
       function startGame() {
         setCrateSlideSound(false);
@@ -1169,7 +1167,7 @@
           return;
         }
         menuTitle.textContent = 'HOW TO PLAY';
-        menuCopy.textContent = 'Arrow keys  ·  Move\nW A S D  ·  Aim your revolver\nSpace  ·  Fire (1 second between shots)\n\nSurvive the zombie horde and earn kills. Different zombies take different numbers of hits. Stay alert: the light shrinks as your kill count rises.\n\nA crate appears every 2 kills when there is room, with a maximum of 2 at a time. Run into a crate to push it; pushing slows you by 50%. Crates block zombies. Shoot crates to break them.';
+        menuCopy.textContent = 'Arrow keys  ·  Move\nW A S D  ·  Aim your revolver\nSpace  ·  Fire (1 second between shots)\nEnter  ·  Enter the staircase after 1 kill\n\nSurvive the zombie horde and earn kills. Different zombies take different numbers of hits. Stay alert: the light shrinks as your kill count rises.\n\nA crate appears every 2 kills when there is room, with a maximum of 2 at a time. Run into a crate to push it; pushing slows you by 50%. Crates block zombies. Shoot crates to break them.';
         menuCopy.classList.add('rules-copy');
         start.hidden = true;
         levels.hidden = true;
@@ -1180,6 +1178,13 @@
       window.addEventListener('keydown', e => {
         if (e.ctrlKey && e.code === 'Digit6' && !e.repeat) {
           e.preventDefault();
+          beginLevelIntro(2);
+          return;
+        }
+        if (e.code === 'Enter' && !e.repeat && active && !dying && currentLevel === 1
+            && exitStaircase && overlaps(player.x,player.y,player,exitStaircase)) {
+          e.preventDefault();
+          exitStaircase=null;
           beginLevelIntro(2);
           return;
         }
