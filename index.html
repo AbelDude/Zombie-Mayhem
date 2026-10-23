@@ -588,13 +588,18 @@
       function drawPressureButton() {
         const x=Math.round(pressureButton.x), y=Math.round(pressureButton.y), size=pressureButton.w;
         const pressed=pressureButtonActive;
-        rect(x,y,size,size,'#513d2b');
-        rect(x+1,y+1,size-2,size-2,pressed?'#745130':'#9a7041');
-        rect(x+2,y+2,size-4,2,pressed?'#8c6335':'#bd9257');
-        rect(x+2,y+size-4,size-4,2,pressed?'#513d2b':'#745130');
-        rect(x+3,y+3,2,size-6,'#60452e');
-        rect(x+size-5,y+3,2,size-6,'#60452e');
-        rect(x+size/2-1,y+size/2-1,3,3,pressed?'#60452e':'#d1a25f');
+        rect(x,y,size,size,'#252d32');
+        rect(x+1,y+1,size-2,size-2,'#65747a');
+        rect(x+2,y+2,size-4,size-4,pressed?'#3d4a50':'#46545a');
+        rect(x+3,y+3,size-6,2,pressed?'#65747a':'#89979b');
+        rect(x+3,y+size-5,size-6,2,'#303b41');
+        rect(x+3,y+3,2,size-6,pressed?'#65747a':'#89979b');
+        rect(x+size-5,y+3,2,size-6,'#303b41');
+        rect(x+4,y+4,size-8,size-8,pressed?'#354147':'#58676c');
+        rect(x+3,y+3,1,1,'#c0c9bd');
+        rect(x+size-4,y+3,1,1,'#c0c9bd');
+        rect(x+3,y+size-4,1,1,'#c0c9bd');
+        rect(x+size-4,y+size-4,1,1,'#c0c9bd');
       }
       function drawDoorTile(wall,openProgress) {
         const x=wall.x*TILE, y=wall.y*TILE;
