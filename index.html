@@ -250,6 +250,7 @@
       let lightRestoredAtKills = 0;
       const levelIntroHoldDuration = 2000, levelIntroFadeDuration = 600;
       let nextCrateKillThreshold = 2;
+      const crateSpawnRooms = [];
       const deathAnimationDuration = 900;
       let playerRedBlink = false;
       let zombieRedBlink = false;
@@ -872,6 +873,12 @@
               zombie.removeAt = zombie.lastHitAt + 480;
               zombiesKilled++;
               scoreDisplay.textContent = `KILLS · ${zombiesKilled}`;
+              if (zombiesKilled % 2 === 0) {
+                crateSpawnRooms.push(currentLevel === 2 ? {
+                  col: Math.min(1, Math.floor((zombie.x + zombie.w / 2) / (roomCols * TILE))),
+                  row: Math.min(1, Math.floor((zombie.y + zombie.h / 2) / (roomRows * TILE)))
+                } : null);
+              }
               if (currentLevel === 1 && zombiesKilled >= 8) {
                 levelOneExitOpen=true;
                 return;
@@ -1048,6 +1055,7 @@
         lanterns.length = 0;
         crateDebris.length = 0;
         nextCrateKillThreshold = 2;
+        crateSpawnRooms.length = 0;
         zombiesKilled = 0;
         lightRestoredAtKills = 0;
         dying = false;
@@ -1164,6 +1172,7 @@
         lanterns.length = 0;
         crateDebris.length = 0;
         nextCrateKillThreshold = 2;
+        crateSpawnRooms.length = 0;
         music.pause();
         music.currentTime = 0;
         player.x = Math.floor((W-player.w)/2);
@@ -1288,18 +1297,20 @@
         lastZombieSpawn = time;
       }
 
-      function spawnCrate() {
+      function spawnCrate(room=null) {
         const crate={x:0,y:0,w:14,h:14};
-        const firstLevelTwoRoom={x:0,y:0,w:roomCols*TILE,h:roomRows*TILE};
         const spots=[];
-        for (let y=1;y<worldRows-1;y++) for(let x=1;x<worldCols-1;x++) spots.push({x:x*TILE+1,y:y*TILE+1});
+        const minX=room ? room.col*roomCols+1 : 1;
+        const maxX=room ? (room.col+1)*roomCols-1 : worldCols-1;
+        const minY=room ? room.row*roomRows+1 : 1;
+        const maxY=room ? (room.row+1)*roomRows-1 : worldRows-1;
+        for (let y=minY;y<maxY;y++) for(let x=minX;x<maxX;x++) spots.push({x:x*TILE+1,y:y*TILE+1});
         for(let i=spots.length-1;i>0;i--) {
           const j=Math.floor(Math.random()*(i+1));
           [spots[i],spots[j]]=[spots[j],spots[i]];
         }
         for(const spot of spots) {
           if (currentLevel === 2 && overlaps(spot.x,spot.y,crate,pressureButton)) continue;
-          if (currentLevel === 2 && overlaps(spot.x,spot.y,crate,firstLevelTwoRoom)) continue;
           const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
           const nearestX=Math.max(spot.x,Math.min(lightX,spot.x+crate.w));
           const nearestY=Math.max(spot.y,Math.min(lightY,spot.y+crate.h));
@@ -1325,9 +1336,10 @@
         if (canMoveCrate(crate,crate.x,crate.y)) crates.push(crate);
       }
       function checkCrateSpawns() {
-        while (zombiesKilled >= nextCrateKillThreshold) {
+        while (crateSpawnRooms.length && zombiesKilled >= nextCrateKillThreshold) {
           const normalCrates=crates.filter(crate => !crate.indestructible).length;
-          if (normalCrates < 2 && !spawnCrate()) return;
+          if (normalCrates >= 2 || !spawnCrate(crateSpawnRooms[0])) return;
+          crateSpawnRooms.shift();
           nextCrateKillThreshold += 2;
         }
       }
