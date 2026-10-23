@@ -781,14 +781,16 @@
             && player.y >= roomRows*TILE) {
           lowerRoomEntryLocked=true;
         }
-        if (currentLevel === 2 && !levelTwoExitOpen
-            && player.x+player.w/2 >= roomCols*TILE
-            && player.y+player.h <= roomRows*TILE) {
-          levelTwoExitOpen=true;
-        }
         if (currentLevel === 1 && levelOneExitOpen
             && player.x+player.w/2 >= 9*TILE
             && player.x+player.w/2 <= 11*TILE
+            && player.y+player.h/2 < 0) {
+          beginLevelComplete();
+          return;
+        }
+        if (currentLevel === 2 && levelTwoExitOpen
+            && player.x+player.w/2 >= (roomCols+9)*TILE
+            && player.x+player.w/2 <= (roomCols+11)*TILE
             && player.y+player.h/2 < 0) {
           beginLevelComplete();
           return;
@@ -873,8 +875,8 @@
               if (currentLevel === 1 && zombiesKilled >= 8) {
                 levelOneExitOpen=true;
                 return;
-              } else if (currentLevel === 2 && zombiesKilled >= 12) {
-                beginLevelComplete();
+              } else if (currentLevel === 2 && zombiesKilled >= 10) {
+                levelTwoExitOpen=true;
                 return;
               }
             }
@@ -1022,7 +1024,7 @@
         aimKeys.clear();
         hud.style.display='none';
         menuTitle.textContent=`LEVEL ${currentLevel}`;
-        menuCopy.textContent=currentLevel === 2 ? '12 KILLS · FASTER HORDE' : '';
+        menuCopy.textContent=currentLevel === 2 ? '10 KILLS · FASTER HORDE' : '';
         menuCopy.classList.remove('rules-copy');
         menu.classList.remove('game-over','fading','level-complete');
         menu.classList.add('level-intro');
@@ -1111,7 +1113,7 @@
         bullets.length=0;
         hud.style.display='none';
         menuTitle.textContent='COMPLETE';
-        menuCopy.textContent=currentLevel === 2 ? 'LEVEL 2 · 12 KILLS' : '';
+        menuCopy.textContent=currentLevel === 2 ? 'LEVEL 2 · 10 KILLS' : '';
         menuCopy.classList.remove('rules-copy');
         menu.classList.remove('game-over','level-intro','fading');
         menu.classList.add('level-complete');
@@ -1206,7 +1208,7 @@
           return;
         }
         menuTitle.textContent = 'HOW TO PLAY';
-        menuCopy.textContent = 'Arrow keys  ·  Move\nW A S D  ·  Aim your revolver\nSpace  ·  Fire (1 second between shots)\nEnter  ·  Enter the staircase after 1 kill\n\nSurvive the zombie horde and earn kills. Different zombies take different numbers of hits. Stay alert: the light shrinks as your kill count rises.\n\nA crate appears every 2 kills when there is room, with a maximum of 2 at a time. Run into a crate to push it; pushing slows you by 50%. Crates block zombies. Shoot crates to break them.';
+        menuCopy.textContent = 'Arrow keys  ·  Move\nW A S D  ·  Aim your revolver\nSpace  ·  Fire (1 second between shots)\nLevel 1  ·  Enter the golden hall after 8 kills\nLevel 2  ·  Enter the golden hall after 10 kills\n\nSurvive the zombie horde and earn kills. Different zombies take different numbers of hits. Stay alert: the light shrinks as your kill count rises.\n\nA crate appears every 2 kills when there is room, with a maximum of 2 at a time. Run into a crate to push it; pushing slows you by 50%. Crates block zombies. Shoot crates to break them.';
         menuCopy.classList.add('rules-copy');
         start.hidden = true;
         levels.hidden = true;
@@ -1276,6 +1278,7 @@
       function checkZombieSpawn(time) {
         if (noZombiesMode) return;
         if (currentLevel === 1 && zombiesKilled >= 8) return;
+        if (currentLevel === 2 && zombiesKilled >= 10) return;
         const elapsedStages = Math.floor((time - gameStartedAt) / (currentLevel === 2 ? 30000 : 45000));
         const spawnInterval = currentLevel === 2
           ? Math.max(1200, 4200 - elapsedStages * 700)
