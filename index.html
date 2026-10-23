@@ -267,89 +267,14 @@
       }
       function rect(x,y,w,h,c) { ctx.fillStyle = tintGameColor(c); ctx.fillRect(Math.round(x),Math.round(y),w,h); }
       function drawPlayerEye(x,y) { rect(x,y,1,1,'#293a35'); }
-      function rayRectDistance(originX,originY,dirX,dirY,maxDistance,wall) {
-        const minX=wall.x, minY=wall.y, maxX=wall.x+wall.w, maxY=wall.y+wall.h;
-        let near=-Infinity, far=Infinity;
-        if (Math.abs(dirX)<1e-8) {
-          if (originX<minX || originX>maxX) return Infinity;
-        } else {
-          const a=(minX-originX)/dirX, b=(maxX-originX)/dirX;
-          near=Math.max(near,Math.min(a,b)); far=Math.min(far,Math.max(a,b));
-        }
-        if (Math.abs(dirY)<1e-8) {
-          if (originY<minY || originY>maxY) return Infinity;
-        } else {
-          const a=(minY-originY)/dirY, b=(maxY-originY)/dirY;
-          near=Math.max(near,Math.min(a,b)); far=Math.min(far,Math.max(a,b));
-        }
-        if (far<Math.max(near,0) || near>maxDistance || far<0) return Infinity;
-        return Math.max(0,near);
-      }
-      function collectLightBlockers(lightX,lightY,lightRadius) {
-        const blockers=[];
-        for (const wall of walls) {
-          if (currentLevel === 1 && levelOneExitOpen && levelOneExitKeys.has(`${wall.x},${wall.y}`)) continue;
-          if (currentLevel === 2 && levelTwoExitOpen && levelTwoExitKeys.has(`${wall.x},${wall.y}`)) continue;
-          if (currentLevel === 2 && doorOpen && doorOpenProgress>=1 && lowerDoorKeys.has(`${wall.x},${wall.y}`)) continue;
-          const blocker={x:wall.x*TILE,y:wall.y*TILE,w:TILE,h:TILE};
-          const nearX=Math.max(blocker.x,Math.min(lightX,blocker.x+blocker.w));
-          const nearY=Math.max(blocker.y,Math.min(lightY,blocker.y+blocker.h));
-          if (Math.hypot(nearX-lightX,nearY-lightY)<=lightRadius+1) blockers.push(blocker);
-        }
-        if (currentLevel === 2) {
-          if (lowerRoomEntryLocked || lowerRoomEntryProgress>0) {
-            for (const tile of lowerRoomEntryTiles) blockers.push({x:tile.x*TILE,y:tile.y*TILE,w:TILE,h:TILE});
-          }
-          if (upperRightEntryLocked || upperRightEntryProgress>0) {
-            for (const tile of upperRightEntryTiles) blockers.push({x:tile.x*TILE,y:tile.y*TILE,w:TILE,h:TILE});
-          }
-        }
-        return blockers;
-      }
-      function getLightVisibilityPolygon(lightX,lightY,lightRadius,blockers) {
-        const angles=[];
-        const rayCount=160;
-        for (let i=0;i<rayCount;i++) angles.push(i*Math.PI*2/rayCount);
-        const epsilon=0.001;
-        for (const wall of blockers) {
-          for (const [x,y] of [[wall.x,wall.y],[wall.x+wall.w,wall.y],[wall.x+wall.w,wall.y+wall.h],[wall.x,wall.y+wall.h]]) {
-            const dx=x-lightX, dy=y-lightY;
-            if (dx*dx+dy*dy>(lightRadius+TILE)*(lightRadius+TILE)) continue;
-            const angle=Math.atan2(dy,dx);
-            angles.push(angle-epsilon,angle,angle+epsilon);
-          }
-        }
-        angles.sort((a,b)=>a-b);
-        return angles.map(angle=>{
-          const dirX=Math.cos(angle), dirY=Math.sin(angle);
-          let distance=lightRadius;
-          for (const wall of blockers) distance=Math.min(distance,rayRectDistance(lightX,lightY,dirX,dirY,lightRadius,wall));
-          return {
-            x:Math.round((lightX+dirX*distance)*2)/2,
-            y:Math.round((lightY+dirY*distance)*2)/2
-          };
-        });
-      }
-      function clipToLightPolygon(polygon) {
-        ctx.beginPath();
-        if (!polygon.length) return;
-        ctx.moveTo(polygon[0].x,polygon[0].y);
-        for (let i=1;i<polygon.length;i++) ctx.lineTo(polygon[i].x,polygon[i].y);
-        ctx.closePath();
-        ctx.clip();
-      }
-      function isVisibleFromLight(x,y,lightX,lightY,blockers) {
-        const dx=x-lightX, dy=y-lightY, distance=Math.hypot(dx,dy);
-        if (distance<=1) return true;
-        const dirX=dx/distance, dirY=dy/distance;
-        return !blockers.some(wall=>rayRectDistance(lightX,lightY,dirX,dirY,distance,wall)<distance-0.5);
-      }
-      function drawGround(lightRadius, illuminated, cameraX, cameraY, lightPolygon) {
-        const lightX=Math.round(player.x+player.w/2), lightY=Math.round(player.y+player.h/2);
+      function drawGround(lightRadius, illuminated, cameraX, cameraY) {
+        const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
         rect(cameraX,cameraY,W,H,'#171b24');
         if (!illuminated) return;
         ctx.save();
-        clipToLightPolygon(lightPolygon);
+        ctx.beginPath();
+        ctx.arc(lightX,lightY,lightRadius,0,Math.PI*2);
+        ctx.clip();
         rect(0,0,worldWidth,worldHeight,'#20242a');
         const cracks=new Set(['2,2','8,3','15,4','5,7','12,8','16,10']);
         for (let y=0; y<worldRows; y++) for (let x=0; x<worldCols; x++) {
@@ -564,13 +489,11 @@
         const cameraMaxX=Math.max(0,worldWidth-W), cameraMaxY=Math.max(0,worldHeight-H);
         camera.x=Math.round(Math.max(0,Math.min(cameraMaxX,player.x+player.w/2-W/2)));
         camera.y=Math.round(Math.max(0,Math.min(cameraMaxY,player.y+player.h/2-H/2)));
-        const lightX=Math.round(player.x+player.w/2), lightY=Math.round(player.y+player.h/2);
-        const lightBlockers=collectLightBlockers(lightX,lightY,lightRadius);
-        const lightPolygon=getLightVisibilityPolygon(lightX,lightY,lightRadius,lightBlockers);
+        const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
         ctx.clearRect(0,0,W,H);
         ctx.save();
         ctx.translate(-camera.x,-camera.y);
-        drawGround(lightRadius,showGameplayScene,camera.x,camera.y,lightPolygon);
+        drawGround(lightRadius,showGameplayScene,camera.x,camera.y);
         for (const wall of walls) {
           if (currentLevel === 1 && levelOneExitOpen && levelOneExitKeys.has(`${wall.x},${wall.y}`)) continue;
           if (currentLevel === 2 && levelTwoExitOpen && levelTwoExitKeys.has(`${wall.x},${wall.y}`)) continue;
@@ -594,7 +517,7 @@
             const distance=Math.hypot(buttonX-(player.x+player.w/2),buttonY-(player.y+player.h/2));
             const fade=Math.max(0,Math.min(1,(lightRadius-distance)/10));
             const opacity=fade*fade*(3-2*fade);
-            if (opacity>0 && isVisibleFromLight(buttonX,buttonY,lightX,lightY,lightBlockers)) {
+            if (opacity>0) {
               ctx.save();
               ctx.globalAlpha=opacity;
               drawPressureButton(button,i===0?pressureButtonActive:upperRightButtonActive[i-1]);
@@ -603,10 +526,12 @@
           }
         }
         if (active) {
+          const lightX = player.x + player.w / 2;
+          const lightY = player.y + player.h / 2;
           for (const crate of crates) {
             const distance = Math.hypot(crate.x + crate.w / 2 - lightX, crate.y + crate.h / 2 - lightY);
             const fade = Math.max(0, Math.min(1, (currentLightRadius() - distance) / 10));
-            if (fade > 0 && isVisibleFromLight(crate.x+crate.w/2,crate.y+crate.h/2,lightX,lightY,lightBlockers)) {
+            if (fade > 0) {
               ctx.save();
               ctx.globalAlpha = fade * fade * (3 - 2 * fade);
               drawCrate(crate);
@@ -616,7 +541,7 @@
           for (const lantern of lanterns) {
             const distance = Math.hypot(lantern.x + lantern.w / 2 - lightX, lantern.y + lantern.h / 2 - lightY);
             const fade = Math.max(0, Math.min(1, (currentLightRadius() - distance) / 10));
-            if (fade > 0 && isVisibleFromLight(lantern.x+lantern.w/2,lantern.y+lantern.h/2,lightX,lightY,lightBlockers)) {
+            if (fade > 0) {
               ctx.save();
               ctx.globalAlpha = fade * fade * (3 - 2 * fade);
               drawLantern(lantern);
@@ -630,7 +555,7 @@
             const fadeWidth = 10;
             const fade = Math.max(0, Math.min(1, (lightRadius - distance) / fadeWidth));
             const opacity = fade * fade * (3 - 2 * fade);
-            if (opacity > 0 && isVisibleFromLight(zombieX,zombieY,lightX,lightY,lightBlockers)) {
+            if (opacity > 0) {
               ctx.save();
               ctx.globalAlpha = opacity;
               drawZombie(zombie);
@@ -642,7 +567,7 @@
           const distance = Math.hypot(bullet.x + 1 - (player.x + player.w / 2), bullet.y + 1 - (player.y + player.h / 2));
           const fade = Math.max(0, Math.min(1, (lightRadius - distance) / (lightRadius * 0.64)));
           const opacity = fade * fade * (3 - 2 * fade);
-          if (opacity > 0 && isVisibleFromLight(bullet.x+1,bullet.y+1,lightX,lightY,lightBlockers)) {
+          if (opacity > 0) {
             ctx.save();
             ctx.globalAlpha = opacity;
             rect(bullet.x, bullet.y, 2, 2, '#ffe59a');
@@ -655,7 +580,7 @@
           const distance=Math.hypot(bit.x-lightX,bit.y-lightY);
           const lightFade=Math.max(0,Math.min(1,(lightRadius-distance)/10));
           const lightOpacity=lightFade*lightFade*(3-2*lightFade);
-          if (remaining>0 && lightOpacity>0 && isVisibleFromLight(bit.x,bit.y,lightX,lightY,lightBlockers)) {
+          if (remaining>0 && lightOpacity>0) {
             ctx.save();
             ctx.globalAlpha=remaining*lightOpacity;
             rect(bit.x,bit.y,bit.size,bit.size,bit.color);
@@ -669,11 +594,8 @@
           glow.addColorStop(0, 'rgba(255, 230, 157, 0.34)');
           glow.addColorStop(0.55, 'rgba(255, 220, 145, 0.16)');
           glow.addColorStop(1, 'rgba(255, 210, 130, 0)');
-          ctx.save();
-          clipToLightPolygon(lightPolygon);
           ctx.fillStyle = glow;
           ctx.fillRect(lightX - lightRadius, lightY - lightRadius, lightRadius * 2, lightRadius * 2);
-          ctx.restore();
         }
         ctx.restore();
       }
