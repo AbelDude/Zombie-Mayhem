@@ -456,8 +456,9 @@
         for (const wall of walls) {
           const isLowerDoor=currentLevel === 2 && lowerDoorKeys.has(`${wall.x},${wall.y}`);
           if (isLowerDoor && doorOpen) continue;
-          if (isLowerDoor) drawDoorTile(wall);
-          else drawBrickWall(wall);
+          if (isLowerDoor) {
+            if (wall.y === lowerDoorTiles[0].y) drawDoorTile(wall);
+          } else drawBrickWall(wall);
         }
         if (currentLevel === 2 && showGameplayScene) {
           const buttonX=pressureButton.x+pressureButton.w/2;
@@ -595,10 +596,10 @@
       }
       function drawDoorTile(wall) {
         const x=wall.x*TILE, y=wall.y*TILE;
-        const width=TILE/2, height=TILE/4;
-        const insetX=(TILE-width)/2, insetY=(TILE-height)/2;
-        rect(x+insetX,y+insetY,width,height,'#394447');
-        rect(x+insetX+1,y+insetY+1,width-2,height-2,'#788487');
+        const width=TILE/2, height=TILE*2;
+        const insetX=(TILE-width)/2;
+        rect(x+insetX,y,width,height,'#394447');
+        rect(x+insetX+1,y+1,width-2,height-2,'#788487');
       }
       function blockedRect(x,y,w,h) {
         const left=Math.floor(x/TILE), right=Math.floor((x+w-1)/TILE);
