@@ -199,8 +199,8 @@
         doorOpenProgress = 0;
         lowerRoomEntryLocked = false;
         lowerRoomEntryProgress = 0;
-        upperRightEntryLocked = false;
-        upperRightEntryProgress = 0;
+        upperRightEntryLocked = level === 2;
+        upperRightEntryProgress = level === 2 ? 1 : 0;
         camera.x = 0;
         camera.y = 0;
       }
@@ -742,11 +742,6 @@
             && player.x+player.w/2 < roomCols*TILE
             && player.y >= roomRows*TILE) {
           lowerRoomEntryLocked=true;
-        }
-        if (currentLevel === 2 && !upperRightEntryLocked
-            && player.x+player.w/2 >= roomCols*TILE
-            && player.y+player.h <= roomRows*TILE) {
-          upperRightEntryLocked=true;
         }
         for (let i=lanterns.length-1; i>=0; i--) {
           if (overlaps(player.x,player.y,player,lanterns[i])) {
