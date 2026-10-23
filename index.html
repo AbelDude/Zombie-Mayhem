@@ -240,7 +240,6 @@
       const zombies = [];
       const crates = [];
       const lanterns = [];
-      let exitStaircase = null;
       const crateDebris = [];
       const zombieLooks = [
         { coatBase:'#394d3d', coat:'#506547', coatLight:'#708052', belt:'#303633', buckle:'#9b8f5d', sleeve:'#506447', cuff:'#809065', skin:'#91a37a', skinShade:'#738660', hair:'#373d37', hairLight:'#50584a', backHair:'#596b50', backHairLight:'#839166', backLine:'#3c4a3d', backAccent:'#66764d', backMark:'#81875d', eye:'#e76c5d', mouth:'#333c31', tear:'#889168', sideMouth:'#59684a' },
@@ -520,9 +519,6 @@
             ctx.restore();
           }
         }
-        if (currentLevel === 1 && exitStaircase && showGameplayScene) {
-          drawLitStaircase(exitStaircase,lightRadius);
-        }
         if (active) {
           const lightX = player.x + player.w / 2;
           const lightY = player.y + player.h / 2;
@@ -633,35 +629,6 @@
         rect(x+4,y+5,4,5,'#ffe58d');
         rect(x+3,y+11,6,2,'#a97838');
         rect(x+4,y+13,4,1,'#725231');
-      }
-      function drawStaircase(staircase) {
-        const x=Math.round(staircase.x), y=Math.round(staircase.y), size=staircase.w;
-        const stepColors=['#818b8e','#646e72','#424d51'];
-        rect(x,y,size,size,'#1d2428');
-        rect(x+2,y+2,size-4,size-4,'#3b4549');
-        rect(x+3,y+3,2,size-6,'#929c9e');
-        rect(x+size-5,y+3,2,size-6,'#252d31');
-        for (let step=0; step<3; step++) {
-          const stepY=y+3+step*8;
-          rect(x+5,stepY,size-10,8,stepColors[step]);
-          rect(x+5,stepY,size-10,1,step===0?'#a4adae':'#8b9597');
-          rect(x+5,stepY+7,size-10,1,'#293236');
-        }
-      }
-      function drawLitStaircase(staircase,lightRadius) {
-        const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
-        drawStaircase(staircase);
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(staircase.x,staircase.y,staircase.w,staircase.h);
-        ctx.clip();
-        const edgeShade=ctx.createRadialGradient(lightX,lightY,lightRadius*0.52,lightX,lightY,lightRadius);
-        edgeShade.addColorStop(0,'rgba(23,27,36,0)');
-        edgeShade.addColorStop(0.55,'rgba(23,27,36,0.18)');
-        edgeShade.addColorStop(1,'rgba(23,27,36,1)');
-        ctx.fillStyle=edgeShade;
-        ctx.fillRect(staircase.x,staircase.y,staircase.w,staircase.h);
-        ctx.restore();
       }
       function drawPressureButton() {
         const {x,y,w,h}=pressureButton;
@@ -836,8 +803,8 @@
               zombie.removeAt = zombie.lastHitAt + 480;
               zombiesKilled++;
               scoreDisplay.textContent = `KILLS · ${zombiesKilled}`;
-              if (currentLevel === 1 && zombiesKilled >= 1) {
-                spawnLevelStaircase();
+              if (currentLevel === 1 && zombiesKilled >= 8) {
+                beginLevelComplete();
                 return;
               } else if (currentLevel === 2 && zombiesKilled >= 12) {
                 beginLevelComplete();
@@ -995,12 +962,6 @@
         levelIntroStartedAt=performance.now();
         levelIntroActive=true;
       }
-      function spawnLevelStaircase() {
-        if (exitStaircase) return;
-        level1Completed=true;
-        const size=2*TILE;
-        exitStaircase={x:(W-size)/2,y:(H-size)/2+TILE/2,w:size,h:size};
-      }
       function startGame() {
         setCrateSlideSound(false);
         configureLevelMap(currentLevel);
@@ -1012,7 +973,6 @@
         zombies.length = 0;
         crates.length = 0;
         lanterns.length = 0;
-        exitStaircase = null;
         crateDebris.length = 0;
         nextCrateKillThreshold = 2;
         zombiesKilled = 0;
@@ -1125,7 +1085,6 @@
         zombies.length = 0;
         crates.length = 0;
         lanterns.length = 0;
-        exitStaircase = null;
         crateDebris.length = 0;
         nextCrateKillThreshold = 2;
         music.pause();
@@ -1186,13 +1145,6 @@
           beginLevelIntro(2);
           return;
         }
-        if (e.code === 'Enter' && !e.repeat && active && !dying && currentLevel === 1
-            && exitStaircase && overlaps(player.x,player.y,player,exitStaircase)) {
-          e.preventDefault();
-          exitStaircase=null;
-          beginLevelIntro(2);
-          return;
-        }
         if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Spacebar'].includes(e.key)) e.preventDefault();
         if (!active || dying) return;
         if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) keys.add(e.key);
@@ -1234,7 +1186,6 @@
       }
 
       function checkZombieSpawn(time) {
-        if (currentLevel === 1 && zombiesKilled >= 1) return;
         const elapsedStages = Math.floor((time - gameStartedAt) / (currentLevel === 2 ? 30000 : 45000));
         const spawnInterval = currentLevel === 2
           ? Math.max(1200, 4200 - elapsedStages * 700)
