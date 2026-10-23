@@ -610,6 +610,13 @@
       function drawDoorPanel(x,y,width,height) {
         rect(x,y,width,height,'#394447');
         rect(x+1,y+1,width-2,height-2,'#788487');
+        rect(x+2,y+2,width-4,height-4,'#687477');
+        rect(x+2,y+3,1,height-6,'#a0a8a8');
+        rect(x+width-3,y+3,1,height-6,'#4b575a');
+        rect(x+3,y+3,1,1,'#c0c7c3');
+        rect(x+width-4,y+3,1,1,'#c0c7c3');
+        rect(x+3,y+height-4,1,1,'#4b575a');
+        rect(x+width-4,y+height-4,1,1,'#4b575a');
       }
       function blockedRect(x,y,w,h) {
         const left=Math.floor(x/TILE), right=Math.floor((x+w-1)/TILE);
