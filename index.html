@@ -633,14 +633,16 @@
       }
       function drawLowerRoomEntryDoors(closedProgress) {
         const x=9*TILE, y=(roomRows-1)*TILE, width=TILE*2, height=TILE;
-        const panelWidth=TILE, panelHeight=TILE/2, panelY=y+(height-panelHeight)/2;
+        const leafWidth=TILE, panelWidth=TILE/2;
         ctx.save();
         ctx.beginPath();
         ctx.rect(x,y,width,height);
         ctx.clip();
-        const travel=(1-closedProgress)*panelWidth;
-        drawDoorPanel(x-travel,panelY,panelWidth,panelHeight);
-        drawDoorPanel(x+panelWidth+travel,panelY,panelWidth,panelHeight);
+        const travel=(1-closedProgress)*leafWidth;
+        for (let panel=0;panel<2;panel++) {
+          drawDoorPanel(x-travel+panel*panelWidth,y,panelWidth,height);
+          drawDoorPanel(x+leafWidth+travel+panel*panelWidth,y,panelWidth,height);
+        }
         ctx.restore();
       }
       function blockedRect(x,y,w,h) {
