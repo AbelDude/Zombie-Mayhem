@@ -28,8 +28,6 @@
     .menu button.level-button { width: 138px; height: 78px; padding: 0; }
     .menu button.locked-level { position: relative; overflow: hidden; }
     .locked-level svg { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
-    .locked-level .chain-art { opacity: 1; transition: opacity .9s linear; }
-    .locked-level.unlocked .chain-art { opacity: 0; }
     .locked-level svg > path, .locked-level svg > rect { transition: opacity .9s linear; }
     .locked-level.unlocked svg > path, .locked-level.unlocked svg > rect { opacity: 0; }
     .locked-level .level-label { position: absolute; z-index: 1; top: 4px; left: 0; right: 0; color: #d8dec8; font-size: 12px; text-align: center; text-shadow: 1px 1px #17211e; }
@@ -70,21 +68,6 @@
           <button id="level-2" class="secondary level-button locked-level" aria-label="Level 2" disabled>
             <span class="level-label">Level 2</span>
             <svg viewBox="0 0 138 78" shape-rendering="crispEdges" aria-hidden="true">
-              <defs>
-                <g id="pixel-link-2" shape-rendering="crispEdges">
-                  <path d="M-6-5h10v2h2v6H4v2H-6V3h-2v-6h2z" fill="#20292b"/>
-                  <path d="M-5-3h8v2h1v4H3v2h-8V3h-1v-4h1z" fill="#8a9690"/>
-                  <rect x="-4" y="-1" width="6" height="2" fill="#394447"/>
-                  <rect x="-5" y="-3" width="6" height="2" fill="#c0c9bd"/>
-                  <rect x="2" y="1" width="3" height="2" fill="#647477"/>
-                </g>
-              </defs>
-              <g class="chain-art" shape-rendering="crispEdges">
-                <use href="#pixel-link-2" transform="translate(58 35) rotate(-153)"/><use href="#pixel-link-2" transform="translate(48 30) rotate(-63)"/><use href="#pixel-link-2" transform="translate(38 25) rotate(-153)"/><use href="#pixel-link-2" transform="translate(28 20) rotate(-63)"/><use href="#pixel-link-2" transform="translate(18 15) rotate(-153)"/><use href="#pixel-link-2" transform="translate(8 10) rotate(-63)"/>
-                <use href="#pixel-link-2" transform="translate(80 35) rotate(-27)"/><use href="#pixel-link-2" transform="translate(90 30) rotate(63)"/><use href="#pixel-link-2" transform="translate(100 25) rotate(-27)"/><use href="#pixel-link-2" transform="translate(110 20) rotate(63)"/><use href="#pixel-link-2" transform="translate(120 15) rotate(-27)"/><use href="#pixel-link-2" transform="translate(130 10) rotate(63)"/>
-                <use href="#pixel-link-2" transform="translate(58 47) rotate(153)"/><use href="#pixel-link-2" transform="translate(48 52) rotate(243)"/><use href="#pixel-link-2" transform="translate(38 57) rotate(153)"/><use href="#pixel-link-2" transform="translate(28 62) rotate(243)"/><use href="#pixel-link-2" transform="translate(18 67) rotate(153)"/><use href="#pixel-link-2" transform="translate(8 72) rotate(243)"/>
-                <use href="#pixel-link-2" transform="translate(80 47) rotate(27)"/><use href="#pixel-link-2" transform="translate(90 52) rotate(117)"/><use href="#pixel-link-2" transform="translate(100 57) rotate(27)"/><use href="#pixel-link-2" transform="translate(110 62) rotate(117)"/><use href="#pixel-link-2" transform="translate(120 67) rotate(27)"/><use href="#pixel-link-2" transform="translate(130 72) rotate(117)"/>
-              </g>
               <path d="M62 40V32a7 7 0 0 1 14 0v8" fill="none" stroke="#c7c9b5" stroke-width="4"/>
               <rect x="59" y="38" width="20" height="17" fill="#283235" stroke="#b7aa77" stroke-width="2"/>
               <rect x="67" y="43" width="4" height="7" fill="#d8c886"/>
@@ -93,21 +76,6 @@
           <button class="secondary level-button locked-level" aria-label="Level 3 locked" disabled>
             <span class="level-label">Level 3</span>
             <svg viewBox="0 0 138 78" shape-rendering="crispEdges" aria-hidden="true">
-              <defs>
-                <g id="pixel-link-3" shape-rendering="crispEdges">
-                  <path d="M-6-5h10v2h2v6H4v2H-6V3h-2v-6h2z" fill="#20292b"/>
-                  <path d="M-5-3h8v2h1v4H3v2h-8V3h-1v-4h1z" fill="#8a9690"/>
-                  <rect x="-4" y="-1" width="6" height="2" fill="#394447"/>
-                  <rect x="-5" y="-3" width="6" height="2" fill="#c0c9bd"/>
-                  <rect x="2" y="1" width="3" height="2" fill="#647477"/>
-                </g>
-              </defs>
-              <g shape-rendering="crispEdges">
-                <use href="#pixel-link-3" transform="translate(58 35) rotate(-153)"/><use href="#pixel-link-3" transform="translate(48 30) rotate(-63)"/><use href="#pixel-link-3" transform="translate(38 25) rotate(-153)"/><use href="#pixel-link-3" transform="translate(28 20) rotate(-63)"/><use href="#pixel-link-3" transform="translate(18 15) rotate(-153)"/><use href="#pixel-link-3" transform="translate(8 10) rotate(-63)"/>
-                <use href="#pixel-link-3" transform="translate(80 35) rotate(-27)"/><use href="#pixel-link-3" transform="translate(90 30) rotate(63)"/><use href="#pixel-link-3" transform="translate(100 25) rotate(-27)"/><use href="#pixel-link-3" transform="translate(110 20) rotate(63)"/><use href="#pixel-link-3" transform="translate(120 15) rotate(-27)"/><use href="#pixel-link-3" transform="translate(130 10) rotate(63)"/>
-                <use href="#pixel-link-3" transform="translate(58 47) rotate(153)"/><use href="#pixel-link-3" transform="translate(48 52) rotate(243)"/><use href="#pixel-link-3" transform="translate(38 57) rotate(153)"/><use href="#pixel-link-3" transform="translate(28 62) rotate(243)"/><use href="#pixel-link-3" transform="translate(18 67) rotate(153)"/><use href="#pixel-link-3" transform="translate(8 72) rotate(243)"/>
-                <use href="#pixel-link-3" transform="translate(80 47) rotate(27)"/><use href="#pixel-link-3" transform="translate(90 52) rotate(117)"/><use href="#pixel-link-3" transform="translate(100 57) rotate(27)"/><use href="#pixel-link-3" transform="translate(110 62) rotate(117)"/><use href="#pixel-link-3" transform="translate(120 67) rotate(27)"/><use href="#pixel-link-3" transform="translate(130 72) rotate(117)"/>
-              </g>
               <path d="M62 40V32a7 7 0 0 1 14 0v8" fill="none" stroke="#c7c9b5" stroke-width="4"/>
               <rect x="59" y="38" width="20" height="17" fill="#283235" stroke="#b7aa77" stroke-width="2"/>
               <rect x="67" y="43" width="4" height="7" fill="#d8c886"/>
@@ -116,21 +84,6 @@
           <button class="secondary level-button locked-level" aria-label="Level 4 locked" disabled>
             <span class="level-label">Level 4</span>
             <svg viewBox="0 0 138 78" shape-rendering="crispEdges" aria-hidden="true">
-              <defs>
-                <g id="pixel-link-4" shape-rendering="crispEdges">
-                  <path d="M-6-5h10v2h2v6H4v2H-6V3h-2v-6h2z" fill="#20292b"/>
-                  <path d="M-5-3h8v2h1v4H3v2h-8V3h-1v-4h1z" fill="#8a9690"/>
-                  <rect x="-4" y="-1" width="6" height="2" fill="#394447"/>
-                  <rect x="-5" y="-3" width="6" height="2" fill="#c0c9bd"/>
-                  <rect x="2" y="1" width="3" height="2" fill="#647477"/>
-                </g>
-              </defs>
-              <g shape-rendering="crispEdges">
-                <use href="#pixel-link-4" transform="translate(58 35) rotate(-153)"/><use href="#pixel-link-4" transform="translate(48 30) rotate(-63)"/><use href="#pixel-link-4" transform="translate(38 25) rotate(-153)"/><use href="#pixel-link-4" transform="translate(28 20) rotate(-63)"/><use href="#pixel-link-4" transform="translate(18 15) rotate(-153)"/><use href="#pixel-link-4" transform="translate(8 10) rotate(-63)"/>
-                <use href="#pixel-link-4" transform="translate(80 35) rotate(-27)"/><use href="#pixel-link-4" transform="translate(90 30) rotate(63)"/><use href="#pixel-link-4" transform="translate(100 25) rotate(-27)"/><use href="#pixel-link-4" transform="translate(110 20) rotate(63)"/><use href="#pixel-link-4" transform="translate(120 15) rotate(-27)"/><use href="#pixel-link-4" transform="translate(130 10) rotate(63)"/>
-                <use href="#pixel-link-4" transform="translate(58 47) rotate(153)"/><use href="#pixel-link-4" transform="translate(48 52) rotate(243)"/><use href="#pixel-link-4" transform="translate(38 57) rotate(153)"/><use href="#pixel-link-4" transform="translate(28 62) rotate(243)"/><use href="#pixel-link-4" transform="translate(18 67) rotate(153)"/><use href="#pixel-link-4" transform="translate(8 72) rotate(243)"/>
-                <use href="#pixel-link-4" transform="translate(80 47) rotate(27)"/><use href="#pixel-link-4" transform="translate(90 52) rotate(117)"/><use href="#pixel-link-4" transform="translate(100 57) rotate(27)"/><use href="#pixel-link-4" transform="translate(110 62) rotate(117)"/><use href="#pixel-link-4" transform="translate(120 67) rotate(27)"/><use href="#pixel-link-4" transform="translate(130 72) rotate(117)"/>
-              </g>
               <path d="M62 40V32a7 7 0 0 1 14 0v8" fill="none" stroke="#c7c9b5" stroke-width="4"/>
               <rect x="59" y="38" width="20" height="17" fill="#283235" stroke="#b7aa77" stroke-width="2"/>
               <rect x="67" y="43" width="4" height="7" fill="#d8c886"/>
