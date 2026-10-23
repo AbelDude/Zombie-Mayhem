@@ -1168,6 +1168,7 @@
 
       function spawnCrate() {
         const crate={x:0,y:0,w:14,h:14};
+        const firstLevelTwoRoom={x:0,y:0,w:roomCols*TILE,h:roomRows*TILE};
         const spots=[];
         for (let y=1;y<worldRows-1;y++) for(let x=1;x<worldCols-1;x++) spots.push({x:x*TILE+1,y:y*TILE+1});
         for(let i=spots.length-1;i>0;i--) {
@@ -1176,6 +1177,7 @@
         }
         for(const spot of spots) {
           if (currentLevel === 2 && overlaps(spot.x,spot.y,crate,pressureButton)) continue;
+          if (currentLevel === 2 && overlaps(spot.x,spot.y,crate,firstLevelTwoRoom)) continue;
           const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
           const nearestX=Math.max(spot.x,Math.min(lightX,spot.x+crate.w));
           const nearestY=Math.max(spot.y,Math.min(lightY,spot.y+crate.h));
