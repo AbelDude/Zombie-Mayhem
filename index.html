@@ -1016,7 +1016,11 @@
         scoreDisplay.textContent = 'KILLS · 0';
         player.x = Math.floor((W-player.w)/2);
         player.y = Math.floor((H-player.h)/2);
-        if (currentLevel === 2) spawnMetalCrate();
+        if (currentLevel === 2) {
+          spawnMetalCrate();
+          spawnMetalCrateAtTile(roomCols + 3,roomRows + 3);
+          spawnMetalCrateAtTile(roomCols + 11,roomRows + 3);
+        }
         player.facing = 1;
         player.view = 'side';
         aim.x = 1;
@@ -1260,6 +1264,10 @@
           y:roomRows*TILE+roomRows*TILE/2-7,
           w:14,h:14,indestructible:true
         };
+        if (canMoveCrate(crate,crate.x,crate.y)) crates.push(crate);
+      }
+      function spawnMetalCrateAtTile(tileX,tileY) {
+        const crate={x:tileX*TILE+1,y:tileY*TILE+1,w:14,h:14,indestructible:true};
         if (canMoveCrate(crate,crate.x,crate.y)) crates.push(crate);
       }
       function checkCrateSpawns() {
