@@ -310,7 +310,7 @@
         const angles=[];
         const rayCount=160;
         for (let i=0;i<rayCount;i++) angles.push(i*Math.PI*2/rayCount);
-        const epsilon=0.0001;
+        const epsilon=0.001;
         for (const wall of blockers) {
           for (const [x,y] of [[wall.x,wall.y],[wall.x+wall.w,wall.y],[wall.x+wall.w,wall.y+wall.h],[wall.x,wall.y+wall.h]]) {
             const dx=x-lightX, dy=y-lightY;
@@ -324,7 +324,10 @@
           const dirX=Math.cos(angle), dirY=Math.sin(angle);
           let distance=lightRadius;
           for (const wall of blockers) distance=Math.min(distance,rayRectDistance(lightX,lightY,dirX,dirY,lightRadius,wall));
-          return {x:lightX+dirX*distance,y:lightY+dirY*distance};
+          return {
+            x:Math.round((lightX+dirX*distance)*2)/2,
+            y:Math.round((lightY+dirY*distance)*2)/2
+          };
         });
       }
       function clipToLightPolygon(polygon) {
@@ -342,7 +345,7 @@
         return !blockers.some(wall=>rayRectDistance(lightX,lightY,dirX,dirY,distance,wall)<distance-0.5);
       }
       function drawGround(lightRadius, illuminated, cameraX, cameraY, lightPolygon) {
-        const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
+        const lightX=Math.round(player.x+player.w/2), lightY=Math.round(player.y+player.h/2);
         rect(cameraX,cameraY,W,H,'#171b24');
         if (!illuminated) return;
         ctx.save();
@@ -561,7 +564,7 @@
         const cameraMaxX=Math.max(0,worldWidth-W), cameraMaxY=Math.max(0,worldHeight-H);
         camera.x=Math.round(Math.max(0,Math.min(cameraMaxX,player.x+player.w/2-W/2)));
         camera.y=Math.round(Math.max(0,Math.min(cameraMaxY,player.y+player.h/2-H/2)));
-        const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
+        const lightX=Math.round(player.x+player.w/2), lightY=Math.round(player.y+player.h/2);
         const lightBlockers=collectLightBlockers(lightX,lightY,lightRadius);
         const lightPolygon=getLightVisibilityPolygon(lightX,lightY,lightRadius,lightBlockers);
         ctx.clearRect(0,0,W,H);
@@ -600,8 +603,6 @@
           }
         }
         if (active) {
-          const lightX = player.x + player.w / 2;
-          const lightY = player.y + player.h / 2;
           for (const crate of crates) {
             const distance = Math.hypot(crate.x + crate.w / 2 - lightX, crate.y + crate.h / 2 - lightY);
             const fade = Math.max(0, Math.min(1, (currentLightRadius() - distance) / 10));
@@ -651,7 +652,7 @@
         for (const bit of crateDebris) {
           const age=performance.now()-bit.bornAt;
           const remaining=Math.max(0,1-age/bit.life);
-          const distance=Math.hypot(bit.x-player.x-player.w/2,bit.y-player.y-player.h/2);
+          const distance=Math.hypot(bit.x-lightX,bit.y-lightY);
           const lightFade=Math.max(0,Math.min(1,(lightRadius-distance)/10));
           const lightOpacity=lightFade*lightFade*(3-2*lightFade);
           if (remaining>0 && lightOpacity>0 && isVisibleFromLight(bit.x,bit.y,lightX,lightY,lightBlockers)) {
