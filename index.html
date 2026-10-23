@@ -633,14 +633,21 @@
       }
       function drawLowerRoomEntryDoors(closedProgress) {
         const x=9*TILE, y=(roomRows-1)*TILE, width=TILE*2, height=TILE;
-        const leafWidth=TILE;
+        const doorWidth=TILE;
         ctx.save();
         ctx.beginPath();
         ctx.rect(x,y,width,height);
         ctx.clip();
-        const travel=(1-closedProgress)*leafWidth;
-        drawDoorPanel(x-travel,y,leafWidth,height);
-        drawDoorPanel(x+leafWidth+travel,y,leafWidth,height);
+        const travel=(1-closedProgress)*doorWidth;
+        drawRotatedDoorPanel(x+doorWidth/2-travel,y+height/2);
+        drawRotatedDoorPanel(x+doorWidth+doorWidth/2+travel,y+height/2);
+        ctx.restore();
+      }
+      function drawRotatedDoorPanel(centerX,centerY) {
+        ctx.save();
+        ctx.translate(centerX,centerY);
+        ctx.rotate(Math.PI/2);
+        drawDoorPanel(-TILE/4,-TILE/2,TILE/2,TILE);
         ctx.restore();
       }
       function blockedRect(x,y,w,h) {
