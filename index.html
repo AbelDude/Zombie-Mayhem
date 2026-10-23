@@ -226,7 +226,7 @@
         return `rgb(${Math.round(95+brightness*0.62)},${Math.round(brightness*0.12)},${Math.round(brightness*0.12)})`;
       }
       function rect(x,y,w,h,c) { ctx.fillStyle = tintGameColor(c); ctx.fillRect(Math.round(x),Math.round(y),w,h); }
-      function drawPlayerEye(x,y) { rect(x,y,1,1,'#293a35'); }
+      function drawPlayerEye(x,y) { rect(x,y,2,2,'#293a35'); }
       function drawGround(lightRadius, illuminated, cameraX, cameraY) {
         const lightX=player.x+player.w/2, lightY=player.y+player.h/2;
         rect(cameraX,cameraY,W,H,'#171b24');
