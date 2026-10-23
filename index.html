@@ -595,14 +595,9 @@
       }
       function drawDoorTile(wall) {
         const x=wall.x*TILE, y=wall.y*TILE;
-        rect(x,y,TILE,TILE,'#292f33');
-        rect(x+2,y+1,TILE-4,TILE-2,'#899396');
-        rect(x+4,y+2,TILE-8,TILE-4,'#566267');
-        rect(x+5,y+3,TILE-10,TILE-6,'#707b7f');
-        rect(x+3,y+2,1,TILE-4,'#c1c8c4');
-        rect(x+TILE-4,y+2,1,TILE-4,'#3b4549');
-        rect(x+5,y+TILE/2-1,TILE-10,2,'#3d474b');
-        rect(x+6,y+TILE/2-1,2,2,'#d1c48d');
+        const size=TILE/2, inset=(TILE-size)/2;
+        rect(x+inset,y+inset,size,size,'#394447');
+        rect(x+inset+1,y+inset+1,size-2,size-2,'#788487');
       }
       function blockedRect(x,y,w,h) {
         const left=Math.floor(x/TILE), right=Math.floor((x+w-1)/TILE);
