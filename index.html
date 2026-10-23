@@ -600,6 +600,7 @@
         const insetX=(TILE-width)/2;
         rect(x+insetX,y,width,height,'#394447');
         rect(x+insetX+1,y+1,width-2,height-2,'#788487');
+        rect(x+insetX,y+height/2-1,width,2,'#394447');
       }
       function blockedRect(x,y,w,h) {
         const left=Math.floor(x/TILE), right=Math.floor((x+w-1)/TILE);
