@@ -1225,6 +1225,11 @@
       restart.addEventListener('click', startGame);
       toMenu.addEventListener('click', showMainMenu);
       window.addEventListener('keydown', e => {
+        if (e.code === 'Enter' && gameOver && !restart.hidden) {
+          e.preventDefault();
+          restart.click();
+          return;
+        }
         if (e.ctrlKey && e.shiftKey && e.code === 'Digit6' && !e.repeat) {
           e.preventDefault();
           noZombiesMode=!noZombiesMode;
