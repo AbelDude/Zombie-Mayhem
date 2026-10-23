@@ -1224,6 +1224,11 @@
       restart.addEventListener('click', startGame);
       toMenu.addEventListener('click', showMainMenu);
       window.addEventListener('keydown', e => {
+        if (e.code === 'Enter' && gameOver && !restart.hidden) {
+          e.preventDefault();
+          restart.click();
+          return;
+        }
         if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Spacebar'].includes(e.key)) e.preventDefault();
         if (!active || dying) return;
         if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) keys.add(e.key);
