@@ -144,11 +144,18 @@
         { x: 10, y: roomRows - 1 }
       ];
       const lowerRoomEntryKeys = new Set(lowerRoomEntryTiles.map(tile => `${tile.x},${tile.y}`));
+      const upperRightEntryTiles = [
+        { x: roomCols + 9, y: roomRows - 1 },
+        { x: roomCols + 10, y: roomRows - 1 }
+      ];
+      const upperRightEntryKeys = new Set(upperRightEntryTiles.map(tile => `${tile.x},${tile.y}`));
       let pressureButtonActive = false;
       let doorOpen = false;
       let doorOpenProgress = 0;
       let lowerRoomEntryLocked = false;
       let lowerRoomEntryProgress = 0;
+      let upperRightEntryLocked = false;
+      let upperRightEntryProgress = 0;
       function configureLevelMap(level) {
         const roomCount = level === 2 ? 2 : 1;
         worldCols = roomCols * roomCount;
@@ -192,6 +199,8 @@
         doorOpenProgress = 0;
         lowerRoomEntryLocked = false;
         lowerRoomEntryProgress = 0;
+        upperRightEntryLocked = false;
+        upperRightEntryProgress = 0;
         camera.x = 0;
         camera.y = 0;
       }
@@ -199,7 +208,8 @@
       function isWallTile(x, y) {
         const key = `${x},${y}`;
         return (wallSet.has(key) && !(currentLevel === 2 && doorOpen && lowerDoorKeys.has(key)))
-          || (currentLevel === 2 && lowerRoomEntryLocked && lowerRoomEntryKeys.has(key));
+          || (currentLevel === 2 && lowerRoomEntryLocked && lowerRoomEntryKeys.has(key))
+          || (currentLevel === 2 && upperRightEntryLocked && upperRightEntryKeys.has(key));
       }
       const player = { x: 2 * TILE + 3, y: 9 * TILE + 3, w: 10, h: 11, speed: 1.35, step: 0, facing: 1, view: 'side' };
       const zombies = [];
@@ -471,7 +481,10 @@
             if (wall.y === lowerDoorTiles[0].y) drawDoorTile(wall,doorOpenProgress);
           } else drawBrickWall(wall);
         }
-        if (currentLevel === 2 && showGameplayScene) drawLowerRoomEntryDoors(lowerRoomEntryProgress);
+        if (currentLevel === 2 && showGameplayScene) {
+          drawRoomEntryDoors(lowerRoomEntryTiles,lowerRoomEntryProgress);
+          drawRoomEntryDoors(upperRightEntryTiles,upperRightEntryProgress);
+        }
         if (currentLevel === 2 && showGameplayScene) {
           const buttonX=pressureButton.x+pressureButton.w/2;
           const buttonY=pressureButton.y+pressureButton.h/2;
@@ -631,8 +644,8 @@
         rect(x+3,y+height-4,1,1,'#4b575a');
         rect(x+width-4,y+height-4,1,1,'#4b575a');
       }
-      function drawLowerRoomEntryDoors(closedProgress) {
-        const x=9*TILE, y=(roomRows-1)*TILE, width=TILE*2, height=TILE;
+      function drawRoomEntryDoors(tiles,closedProgress) {
+        const x=tiles[0].x*TILE, y=tiles[0].y*TILE, width=TILE*2, height=TILE;
         const doorWidth=TILE;
         ctx.save();
         ctx.beginPath();
@@ -729,6 +742,11 @@
             && player.x+player.w/2 < roomCols*TILE
             && player.y >= roomRows*TILE) {
           lowerRoomEntryLocked=true;
+        }
+        if (currentLevel === 2 && !upperRightEntryLocked
+            && player.x+player.w/2 >= roomCols*TILE
+            && player.y+player.h <= roomRows*TILE) {
+          upperRightEntryLocked=true;
         }
         for (let i=lanterns.length-1; i>=0; i--) {
           if (overlaps(player.x,player.y,player,lanterns[i])) {
@@ -917,6 +935,7 @@
         const doorStep=delta/240;
         doorOpenProgress=Math.max(0,Math.min(1,doorOpenProgress+(doorOpen?doorStep:-doorStep)));
         lowerRoomEntryProgress=Math.max(0,Math.min(1,lowerRoomEntryProgress+(lowerRoomEntryLocked?doorStep:-doorStep)));
+        upperRightEntryProgress=Math.max(0,Math.min(1,upperRightEntryProgress+(upperRightEntryLocked?doorStep:-doorStep)));
         if (levelCompleteActive) {
           const elapsed=time-levelCompleteStartedAt;
           if (elapsed>=levelIntroHoldDuration && !levelCompleteFading) {
