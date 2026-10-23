@@ -1209,7 +1209,14 @@
         if (e.ctrlKey && e.shiftKey && e.code === 'Digit6' && !e.repeat) {
           e.preventDefault();
           noZombiesMode=!noZombiesMode;
-          if (noZombiesMode) zombies.length=0;
+          if (noZombiesMode) {
+            zombies.length=0;
+            if (currentLevel === 1) {
+              zombiesKilled=8;
+              scoreDisplay.textContent='KILLS · 8';
+              levelOneExitOpen=true;
+            }
+          }
           return;
         }
         if (e.ctrlKey && e.code === 'Digit6' && !e.repeat) {
