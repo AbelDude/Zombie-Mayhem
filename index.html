@@ -135,6 +135,8 @@
       const camera = { x: 0, y: 0 };
       const levelOneExitTiles = [{x:9,y:0},{x:10,y:0}];
       const levelOneExitKeys = new Set(levelOneExitTiles.map(tile => `${tile.x},${tile.y}`));
+      const levelTwoExitTiles = [{x:roomCols+9,y:0},{x:roomCols+10,y:0}];
+      const levelTwoExitKeys = new Set(levelTwoExitTiles.map(tile => `${tile.x},${tile.y}`));
       const pressureButton = { x: 2 * TILE + 2, y: roomRows * TILE + 6 * TILE + 2, w: 12, h: 12 };
       const upperRightDoorButtons = [
         { x: (roomCols + 4) * TILE + 2, y: (roomRows + 9) * TILE + 2, w: 12, h: 12 },
@@ -164,6 +166,7 @@
       let upperRightEntryLocked = false;
       let upperRightEntryProgress = 0;
       let levelOneExitOpen = false;
+      let levelTwoExitOpen = false;
       function configureLevelMap(level) {
         const roomCount = level === 2 ? 2 : 1;
         worldCols = roomCols * roomCount;
@@ -211,6 +214,7 @@
         upperRightEntryProgress = level === 2 ? 1 : 0;
         upperRightButtonActive.fill(false);
         levelOneExitOpen = false;
+        levelTwoExitOpen = false;
         camera.x = 0;
         camera.y = 0;
       }
@@ -218,6 +222,7 @@
       function isWallTile(x, y) {
         const key = `${x},${y}`;
         if (currentLevel === 1 && levelOneExitKeys.has(key)) return !levelOneExitOpen;
+        if (currentLevel === 2 && levelTwoExitKeys.has(key)) return !levelTwoExitOpen;
         return (wallSet.has(key) && !(currentLevel === 2 && doorOpen && lowerDoorKeys.has(key)))
           || (currentLevel === 2 && lowerRoomEntryLocked && lowerRoomEntryKeys.has(key))
           || (currentLevel === 2 && upperRightEntryLocked && upperRightEntryKeys.has(key));
@@ -489,12 +494,14 @@
         drawGround(lightRadius,showGameplayScene,camera.x,camera.y);
         for (const wall of walls) {
           if (currentLevel === 1 && levelOneExitOpen && levelOneExitKeys.has(`${wall.x},${wall.y}`)) continue;
+          if (currentLevel === 2 && levelTwoExitOpen && levelTwoExitKeys.has(`${wall.x},${wall.y}`)) continue;
           const isLowerDoor=currentLevel === 2 && lowerDoorKeys.has(`${wall.x},${wall.y}`);
           if (isLowerDoor) {
             if (wall.y === lowerDoorTiles[0].y) drawDoorTile(wall,doorOpenProgress);
           } else drawBrickWall(wall);
         }
-        if (currentLevel === 1 && levelOneExitOpen && showGameplayScene) drawLevelOneExitLight();
+        if (currentLevel === 1 && levelOneExitOpen && showGameplayScene) drawGoldenHallLight(10*TILE);
+        if (currentLevel === 2 && levelTwoExitOpen && showGameplayScene) drawGoldenHallLight((roomCols+10)*TILE);
         if (currentLevel === 2 && showGameplayScene) {
           drawRoomEntryDoors(lowerRoomEntryTiles,lowerRoomEntryProgress);
           drawRoomEntryDoors(upperRightEntryTiles,upperRightEntryProgress);
@@ -661,8 +668,8 @@
         rect(x+3,y+height-4,1,1,'#4b575a');
         rect(x+width-4,y+height-4,1,1,'#4b575a');
       }
-      function drawLevelOneExitLight() {
-        const centerX=10*TILE, centerY=4;
+      function drawGoldenHallLight(centerX) {
+        const centerY=4;
         const glow=ctx.createRadialGradient(centerX,centerY,1,centerX,centerY,68);
         glow.addColorStop(0,'rgba(255,218,112,0.62)');
         glow.addColorStop(0.3,'rgba(255,193,76,0.32)');
@@ -773,6 +780,11 @@
             && player.x+player.w/2 < roomCols*TILE
             && player.y >= roomRows*TILE) {
           lowerRoomEntryLocked=true;
+        }
+        if (currentLevel === 2 && !levelTwoExitOpen
+            && player.x+player.w/2 >= roomCols*TILE
+            && player.y+player.h <= roomRows*TILE) {
+          levelTwoExitOpen=true;
         }
         if (currentLevel === 1 && levelOneExitOpen
             && player.x+player.w/2 >= 9*TILE
