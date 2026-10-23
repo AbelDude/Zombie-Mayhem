@@ -141,6 +141,7 @@
       const lowerDoorKeys = new Set(lowerDoorTiles.map(tile => `${tile.x},${tile.y}`));
       let pressureButtonActive = false;
       let doorOpen = false;
+      let doorOpenProgress = 0;
       function configureLevelMap(level) {
         const roomCount = level === 2 ? 2 : 1;
         worldCols = roomCols * roomCount;
@@ -181,6 +182,7 @@
         wallSet = wallKeys;
         pressureButtonActive = false;
         doorOpen = false;
+        doorOpenProgress = 0;
         camera.x = 0;
         camera.y = 0;
       }
@@ -455,9 +457,8 @@
         drawGround(lightRadius,showGameplayScene,camera.x,camera.y);
         for (const wall of walls) {
           const isLowerDoor=currentLevel === 2 && lowerDoorKeys.has(`${wall.x},${wall.y}`);
-          if (isLowerDoor && doorOpen) continue;
           if (isLowerDoor) {
-            if (wall.y === lowerDoorTiles[0].y) drawDoorTile(wall);
+            if (wall.y === lowerDoorTiles[0].y) drawDoorTile(wall,doorOpenProgress);
           } else drawBrickWall(wall);
         }
         if (currentLevel === 2 && showGameplayScene) {
@@ -594,13 +595,21 @@
         rect(x+4,y+h-5,w-8,1,'#687276');
         rect(x+5,y+5,2,2,pressureButtonActive?'#717b7e':'#e7ebea');
       }
-      function drawDoorTile(wall) {
+      function drawDoorTile(wall,openProgress) {
         const x=wall.x*TILE, y=wall.y*TILE;
-        const width=TILE/2, height=TILE*2;
+        const width=TILE/2, panelHeight=TILE;
         const insetX=(TILE-width)/2;
-        rect(x+insetX,y,width,height,'#394447');
-        rect(x+insetX+1,y+1,width-2,height-2,'#788487');
-        rect(x+insetX,y+height/2-1,width,2,'#394447');
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x,y,TILE,TILE*2);
+        ctx.clip();
+        drawDoorPanel(x+insetX,y-openProgress*panelHeight,width,panelHeight);
+        drawDoorPanel(x+insetX,y+panelHeight+openProgress*panelHeight,width,panelHeight);
+        ctx.restore();
+      }
+      function drawDoorPanel(x,y,width,height) {
+        rect(x,y,width,height,'#394447');
+        rect(x+1,y+1,width-2,height-2,'#788487');
       }
       function blockedRect(x,y,w,h) {
         const left=Math.floor(x/TILE), right=Math.floor((x+w-1)/TILE);
@@ -861,6 +870,8 @@
       }
       function loop(time) {
         const delta=Math.min(32,time-last); last=time;
+        const doorStep=delta/240;
+        doorOpenProgress=Math.max(0,Math.min(1,doorOpenProgress+(doorOpen?doorStep:-doorStep)));
         if (levelCompleteActive) {
           const elapsed=time-levelCompleteStartedAt;
           if (elapsed>=levelIntroHoldDuration && !levelCompleteFading) {
