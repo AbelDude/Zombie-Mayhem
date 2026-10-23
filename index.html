@@ -134,6 +134,11 @@
       let wallSet = new Set();
       const camera = { x: 0, y: 0 };
       const pressureButton = { x: 2 * TILE + 2, y: roomRows * TILE + 6 * TILE + 2, w: 12, h: 12 };
+      const upperRightDoorButtons = [
+        { x: (roomCols + 4) * TILE + 2, y: (roomRows + 9) * TILE + 2, w: 12, h: 12 },
+        { x: (roomCols + 14) * TILE + 2, y: (roomRows + 9) * TILE + 2, w: 12, h: 12 }
+      ];
+      const upperRightButtonActive = [false, false];
       const lowerDoorTiles = [
         { x: roomCols - 1, y: roomRows + 5 },
         { x: roomCols - 1, y: roomRows + 6 }
@@ -201,6 +206,7 @@
         lowerRoomEntryProgress = 0;
         upperRightEntryLocked = level === 2;
         upperRightEntryProgress = level === 2 ? 1 : 0;
+        upperRightButtonActive.fill(false);
         camera.x = 0;
         camera.y = 0;
       }
@@ -486,16 +492,20 @@
           drawRoomEntryDoors(upperRightEntryTiles,upperRightEntryProgress);
         }
         if (currentLevel === 2 && showGameplayScene) {
-          const buttonX=pressureButton.x+pressureButton.w/2;
-          const buttonY=pressureButton.y+pressureButton.h/2;
-          const distance=Math.hypot(buttonX-(player.x+player.w/2),buttonY-(player.y+player.h/2));
-          const fade=Math.max(0,Math.min(1,(lightRadius-distance)/10));
-          const opacity=fade*fade*(3-2*fade);
-          if (opacity>0) {
-            ctx.save();
-            ctx.globalAlpha=opacity;
-            drawPressureButton();
-            ctx.restore();
+          const buttons=[pressureButton,...upperRightDoorButtons];
+          for (let i=0;i<buttons.length;i++) {
+            const button=buttons[i];
+            const buttonX=button.x+button.w/2;
+            const buttonY=button.y+button.h/2;
+            const distance=Math.hypot(buttonX-(player.x+player.w/2),buttonY-(player.y+player.h/2));
+            const fade=Math.max(0,Math.min(1,(lightRadius-distance)/10));
+            const opacity=fade*fade*(3-2*fade);
+            if (opacity>0) {
+              ctx.save();
+              ctx.globalAlpha=opacity;
+              drawPressureButton(button,i===0?pressureButtonActive:upperRightButtonActive[i-1]);
+              ctx.restore();
+            }
           }
         }
         if (active) {
@@ -609,9 +619,8 @@
         rect(x+3,y+11,6,2,'#a97838');
         rect(x+4,y+13,4,1,'#725231');
       }
-      function drawPressureButton() {
-        const x=Math.round(pressureButton.x), y=Math.round(pressureButton.y), size=pressureButton.w;
-        const pressed=pressureButtonActive;
+      function drawPressureButton(button,pressed) {
+        const x=Math.round(button.x), y=Math.round(button.y), size=button.w;
         rect(x,y,size,size,'#252d32');
         rect(x+1,y+1,size-2,size-2,'#65747a');
         rect(x+2,y+2,size-4,size-4,pressed?'#3d4a50':'#46545a');
@@ -697,12 +706,17 @@
         if (currentLevel !== 2) {
           pressureButtonActive = false;
           doorOpen = false;
+          upperRightButtonActive.fill(false);
           return;
         }
-        const playerOnButton=overlaps(pressureButton.x,pressureButton.y,pressureButton,player);
-        const crateOnButton=crates.some(crate => overlaps(pressureButton.x,pressureButton.y,pressureButton,crate));
-        pressureButtonActive=playerOnButton || crateOnButton;
+        const isActivated=button => overlaps(button.x,button.y,button,player)
+          || crates.some(crate => overlaps(button.x,button.y,button,crate));
+        pressureButtonActive=isActivated(pressureButton);
         doorOpen=pressureButtonActive;
+        for (let i=0;i<upperRightDoorButtons.length;i++) {
+          upperRightButtonActive[i]=isActivated(upperRightDoorButtons[i]);
+        }
+        upperRightEntryLocked=!upperRightButtonActive.every(Boolean);
       }
       function update() {
         let pushedCrate=false;
